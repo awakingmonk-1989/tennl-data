@@ -1,1 +1,1 @@
-# tennl-data
+# Data Generation repo

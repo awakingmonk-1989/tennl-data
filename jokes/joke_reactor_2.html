@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teddy Bear — JSON Joke Reactor</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --bg:        #f5f0e8;
+          --bg2:       #ede8de;
+          --card:      #fff8f2;
+          --border:    #d4b896;
+          --text:      #3a2a18;
+          --muted:     #9a7a5a;
+          --accent:    #c06020;
+          --btn-bg:    #fff8f0;
+          --btn-hover: #ffeedd;
+          --tag-start: #d4edda;
+          --tag-start-t: #1a5c2a;
+          --tag-punch: #fde8cc;
+          --tag-punch-t: #7a3800;
+          --tag-end:   #e0d8f0;
+          --tag-end-t: #3a1a6a;
+          --error:     #c03020;
+        }
+
+        body.dark {
+          --bg:        #13100c;
+          --bg2:       #1e1810;
+          --card:      #1e1810;
+          --border:    #4a3520;
+          --text:      #d8c8b0;
+          --muted:     #7a6a5a;
+          --accent:    #e8a060;
+          --btn-bg:    #2a1e10;
+          --btn-hover: #3a2a18;
+          --tag-start: #1a3a22;
+          --tag-start-t: #88ddaa;
+          --tag-punch: #3a2008;
+          --tag-punch-t: #ffcc88;
+          --tag-end:   #1e1838;
+          --tag-end-t: #bbaaee;
+          --error:     #ff7060;
+        }
+
+        body {
+          min-height: 100vh;
+          background: var(--bg);
+          color: var(--text);
+          font-family: 'Georgia', serif;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 24px 16px 40px;
+          transition: background 0.3s, color 0.3s;
+        }
+
+        /* ── Dark toggle ── */
+        #darkToggle {
+          position: fixed; top: 12px; right: 14px;
+          font-size: 20px; background: none; border: none;
+          cursor: pointer; padding: 4px 6px; border-radius: 50%;
+          line-height: 1; transition: background 0.2s;
+        }
+        #darkToggle:hover { background: rgba(128,80,20,0.1); }
+
+        /* ── Header ── */
+        h1 {
+          font-size: 22px; font-weight: 400;
+          color: var(--text); letter-spacing: 0.04em;
+          margin-bottom: 4px; text-align: center;
+        }
+        .subtitle {
+          font-size: 13px; color: var(--muted);
+          margin-bottom: 20px; font-style: italic; text-align: center;
+        }
+
+        /* ── Layout: side-by-side on wide, stacked on mobile ── */
+        .layout {
+          display: flex;
+          gap: 28px;
+          align-items: flex-start;
+          width: 100%;
+          max-width: 880px;
+        }
+
+        @media (max-width: 680px) {
+          .layout { flex-direction: column; align-items: center; }
+        }
+
+        /* ── Bear panel ── */
+        .bear-panel {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          flex-shrink: 0;
+        }
+
+        canvas {
+          display: block;
+          border-radius: 16px;
+        }
+
+        /* ── Joke display under bear ── */
+        #jokeDisplay {
+          margin-top: 14px;
+          width: 360px;
+          min-height: 62px;
+          text-align: center;
+          padding: 0 6px;
+        }
+        #dispSetup {
+          font-size: 14px; color: var(--muted);
+          font-style: italic; line-height: 1.6;
+          min-height: 20px;
+        }
+        #dispPunchline {
+          font-size: 15px; font-weight: bold;
+          color: var(--accent); margin-top: 5px;
+          line-height: 1.5; min-height: 20px;
+        }
+        #dispEnd {
+          font-size: 12px; color: var(--muted);
+          margin-top: 4px; font-style: italic;
+          min-height: 16px;
+        }
+
+        /* ── Right panel ── */
+        .input-panel {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        /* ── JSON input card ── */
+        .card {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 16px 18px;
+        }
+
+        .card-title {
+          font-size: 12px;
+          font-weight: bold;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--muted);
+          margin-bottom: 10px;
+        }
+
+        textarea {
+          width: 100%;
+          min-height: 140px;
+          font-family: 'Courier New', monospace;
+          font-size: 13px;
+          background: var(--bg2);
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          padding: 10px 12px;
+          resize: vertical;
+          outline: none;
+          line-height: 1.6;
+          transition: border-color 0.2s;
+        }
+        textarea:focus { border-color: var(--accent); }
+
+        #jsonError {
+          font-size: 12px;
+          color: var(--error);
+          margin-top: 6px;
+          min-height: 16px;
+          font-style: italic;
+        }
+
+        /* ── Buttons ── */
+        .btn-row {
+          display: flex; gap: 10px; flex-wrap: wrap;
+        }
+
+        button.btn {
+          padding: 9px 22px;
+          font-size: 13px;
+          font-family: 'Georgia', serif;
+          border-radius: 30px;
+          border: 1.5px solid var(--border);
+          background: var(--btn-bg);
+          color: var(--text);
+          cursor: pointer;
+          transition: background 0.2s, transform 0.1s;
+          letter-spacing: 0.02em;
+        }
+        button.btn:hover  { background: var(--btn-hover); }
+        button.btn:active { transform: scale(0.97); }
+        button.btn:disabled { opacity: 0.38; cursor: not-allowed; }
+        button.btn.primary {
+          background: var(--accent);
+          border-color: var(--accent);
+          color: #fff;
+        }
+        button.btn.primary:hover { filter: brightness(1.1); }
+
+        /* ── Field status indicators ── */
+        .fields {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .field-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 9px 12px;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          background: var(--bg2);
+          transition: background 0.3s, border-color 0.3s;
+        }
+
+        .field-row.active-start   { background: var(--tag-start); border-color: var(--tag-start-t); }
+        .field-row.active-punch   { background: var(--tag-punch); border-color: var(--tag-punch-t); }
+        .field-row.active-end     { background: var(--tag-end);   border-color: var(--tag-end-t); }
+
+        .field-tag {
+          font-size: 11px;
+          font-family: 'Courier New', monospace;
+          font-weight: bold;
+          padding: 2px 8px;
+          border-radius: 4px;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+
+        .tag-start { background: var(--tag-start); color: var(--tag-start-t); }
+        .tag-punch { background: var(--tag-punch); color: var(--tag-punch-t); }
+        .tag-end   { background: var(--tag-end);   color: var(--tag-end-t); }
+
+        .field-val {
+          font-size: 13px;
+          color: var(--muted);
+          font-style: italic;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .field-val.filled { color: var(--text); font-style: normal; }
+
+        .field-state {
+          margin-left: auto;
+          font-size: 11px;
+          color: var(--muted);
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+
+        /* ── Sample presets ── */
+        .presets {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+
+        .preset-btn {
+          font-size: 11px;
+          padding: 4px 10px;
+          border-radius: 20px;
+          border: 1px solid var(--border);
+          background: var(--btn-bg);
+          color: var(--muted);
+          cursor: pointer;
+          font-family: 'Georgia', serif;
+          transition: background 0.15s;
+        }
+        .preset-btn:hover { background: var(--btn-hover); color: var(--text); }
+
+        /* ── State badge ── */
+        #stateBadge {
+          display: inline-block;
+          font-size: 11px;
+          font-family: 'Courier New', monospace;
+          padding: 3px 10px;
+          border-radius: 20px;
+          background: var(--bg2);
+          border: 1px solid var(--border);
+          color: var(--muted);
+          margin-top: 8px;
+          transition: background 0.3s, color 0.3s;
+        }
+        #stateBadge.s-idle     { background: var(--bg2); color: var(--muted); }
+        #stateBadge.s-suspense { background: var(--tag-start); color: var(--tag-start-t); }
+        #stateBadge.s-laugh    { background: var(--tag-punch); color: var(--tag-punch-t); }
+        #stateBadge.s-settle   { background: var(--tag-end); color: var(--tag-end-t); }
+    </style>
+</head>
+<body>
+
+<button id="darkToggle" title="Toggle dark mode">🌙</button>
+
+<h1>🐻 Teddy Bear — JSON Joke Reactor</h1>
+<p class="subtitle">Paste a joke metadata JSON · watch the bear react field by field</p>
+
+<div class="layout">
+
+    <!-- ── Bear panel ── -->
+    <div class="bear-panel">
+        <canvas id="c" width="360" height="420"></canvas>
+        <div id="jokeDisplay">
+            <div id="dispSetup"></div>
+            <div id="dispPunchline"></div>
+            <div id="dispEnd"></div>
+        </div>
+        <div id="stateBadge" class="s-idle">state: idle</div>
+    </div>
+
+    <!-- ── Input panel ── -->
+    <div class="input-panel">
+
+        <!-- JSON input -->
+        <div class="card">
+            <div class="card-title">Joke Metadata JSON</div>
+            <textarea id="jsonInput" spellcheck="false" placeholder='{
+  "joke_start": "Why don\'t scientists trust atoms?",
+            "punchline": "Because they make up everything!",
+            "joke_end": "Classic!"
+            }'></textarea>
+            <div id="jsonError"></div>
+            <div class="btn-row" style="margin-top:10px;">
+                <button class="btn primary" id="btnFire" onclick="fireJSON()">▶ Fire JSON</button>
+                <button class="btn" onclick="resetBear()">↺ Reset</button>
+            </div>
+        </div>
+
+        <!-- Sample presets -->
+        <div class="card">
+            <div class="card-title">Sample Presets</div>
+            <div class="presets">
+                <button class="preset-btn" onclick="loadPreset(0)">🔬 Atoms</button>
+                <button class="preset-btn" onclick="loadPreset(1)">🐻 Gummy bear</button>
+                <button class="preset-btn" onclick="loadPreset(2)">🚲 Bicycle</button>
+                <button class="preset-btn" onclick="loadPreset(3)">🍝 Impasta</button>
+                <button class="preset-btn" onclick="loadPreset(4)">No joke_end</button>
+            </div>
+        </div>
+
+        <!-- Field status -->
+        <div class="card">
+            <div class="card-title">Field Status → Bear State</div>
+            <div class="fields">
+                <div class="field-row" id="rowStart">
+                    <span class="field-tag tag-start">joke_start</span>
+                    <span class="field-val" id="valStart">—</span>
+                    <span class="field-state" id="stStart">waiting</span>
+                </div>
+                <div class="field-row" id="rowPunch">
+                    <span class="field-tag tag-punch">punchline</span>
+                    <span class="field-val" id="valPunch">—</span>
+                    <span class="field-state" id="stPunch">waiting</span>
+                </div>
+                <div class="field-row" id="rowEnd">
+                    <span class="field-tag tag-end">joke_end</span>
+                    <span class="field-val" id="valEnd">— (optional)</span>
+                    <span class="field-state" id="stEnd">optional</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  DARK MODE
+    // ═══════════════════════════════════════════════════════════════════════════
+    const darkToggle = document.getElementById('darkToggle');
+    let darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    function applyDark() {
+      document.body.classList.toggle('dark', darkMode);
+      darkToggle.textContent = darkMode ? '☀️' : '🌙';
+    }
+    applyDark();
+    darkToggle.addEventListener('click', () => { darkMode = !darkMode; applyDark(); });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  PRESETS
+    // ═══════════════════════════════════════════════════════════════════════════
+    const PRESETS = [
+      { joke_start: "Why don't scientists trust atoms?",     punchline: "Because they make up everything! 😂",   joke_end: "Classic!" },
+      { joke_start: "What do you call a bear with no teeth?", punchline: "A gummy bear! 🐻😂",                   joke_end: "So good." },
+      { joke_start: "Why can't a bicycle stand on its own?",  punchline: "Because it's two-tired! 🚲😂",         joke_end: "Ha!" },
+      { joke_start: "What do you call fake spaghetti?",       punchline: "An impasta! 🍝😂" },
+      { joke_start: "Why did the teddy bear skip dessert?",   punchline: "She was already stuffed! 🧸😂" },
+    ];
+
+    function loadPreset(i) {
+      document.getElementById('jsonInput').value = JSON.stringify(PRESETS[i], null, 2);
+      document.getElementById('jsonError').textContent = '';
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  CANVAS + COLORS
+    // ═══════════════════════════════════════════════════════════════════════════
+    const canvas = document.getElementById('c');
+    const ctx    = canvas.getContext('2d');
+    const W = 360, H = 420;
+
+    const C = {
+      line:     () => darkMode ? '#ccbbaa' : '#3a2a18',
+      skin:     () => darkMode ? '#5a3a1e' : '#e8c890',
+      darkSkin: () => darkMode ? '#3a2010' : '#c89860',
+      white:    () => darkMode ? '#e0d8cc' : '#ffffff',
+      red:      () => darkMode ? '#882222' : '#cc4444',
+      blue:     () => darkMode ? '#6688cc' : '#4477bb',
+      burst:    () => darkMode ? '#ffcc66' : '#cc5500',
+      blush:    () => darkMode ? '#ff8855' : '#ff9977',
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  BEAR STATE
+    // ═══════════════════════════════════════════════════════════════════════════
+    let t             = 0;
+    let state         = 'idle';   // idle | suspense | laugh | settle
+    let laughT        = 0;
+    let settleT       = 0;
+    let blinkTimer    = 0;
+    let blinkOpen     = 1;
+    let headBobX      = 0;
+    let headTiltAngle = 0;
+    let stomachBounce = 0;
+    let bodyShake     = 0;
+    let mouthOpen     = 0;
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  PUBLIC API — called by JSON fields
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * onJokeMetadata(json)
+     * ─────────────────────────────────────────────────────────────────────────
+     * The ONLY entry point that drives the bear.
+     * Accepts the parsed joke metadata object.
+     * Fields are processed sequentially with timing delays so the animation
+     * plays out naturally even if all three fields arrive simultaneously.
+     *
+     * Timing:
+     *   joke_start  → immediate   → bear: suspense
+     *   punchline   → +2.2s delay → bear: laugh
+     *   joke_end    → +5.0s delay → bear: settle (gentle nod, back to idle)
+     */
+    function onJokeMetadata(json) {
+      resetBear(true); // silent reset, keep UI
+
+      // ── joke_start ──────────────────────────────────────────────────────────
+      if (json.joke_start) {
+        setFieldUI('start', json.joke_start, 'suspense →', true);
+        document.getElementById('dispSetup').textContent     = json.joke_start;
+        document.getElementById('dispPunchline').textContent = '';
+        document.getElementById('dispEnd').textContent       = '';
+        setState('suspense');
+      }
+
+      // ── punchline ────────────────────────────────────────────────────────────
+      if (json.punchline) {
+        const delay = json.joke_start ? 2200 : 0;
+        setFieldUI('punch', json.punchline, `laugh in ${(delay/1000).toFixed(1)}s…`, false);
+
+        setTimeout(() => {
+          setFieldUI('punch', json.punchline, 'laugh →', true);
+          document.getElementById('dispPunchline').textContent = json.punchline;
+          setState('laugh');
+        }, delay);
+      }
+
+      // ── joke_end (optional, rare 2-word closer) ──────────────────────────────
+      if (json.joke_end) {
+        const delay = (json.joke_start ? 2200 : 0) + (json.punchline ? 3000 : 0);
+        setFieldUI('end', json.joke_end, `settle in ${(delay/1000).toFixed(1)}s…`, false);
+
+        setTimeout(() => {
+          setFieldUI('end', json.joke_end, 'settle →', true);
+          document.getElementById('dispEnd').textContent = json.joke_end;
+          setState('settle');
+        }, delay);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  STATE TRANSITIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+    function setState(s) {
+      state = s;
+      if (s === 'laugh')   { laughT = 0; }
+      if (s === 'settle')  { settleT = 0; }
+      updateStateBadge();
+    }
+
+    function updateStateBadge() {
+      const el = document.getElementById('stateBadge');
+      el.className = '';
+      el.classList.add('s-' + state);
+      el.textContent = 'state: ' + state;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  FIELD UI HELPERS
+    // ═══════════════════════════════════════════════════════════════════════════
+    function setFieldUI(field, val, stateLabel, active) {
+      const rowMap  = { start: 'rowStart', punch: 'rowPunch', end: 'rowEnd' };
+      const valMap  = { start: 'valStart', punch: 'valPunch', end: 'valEnd' };
+      const stMap   = { start: 'stStart',  punch: 'stPunch',  end: 'stEnd'  };
+      const clsMap  = { start: 'active-start', punch: 'active-punch', end: 'active-end' };
+
+      const row = document.getElementById(rowMap[field]);
+      const valEl = document.getElementById(valMap[field]);
+      const stEl  = document.getElementById(stMap[field]);
+
+      const short = val.length > 34 ? val.slice(0, 32) + '…' : val;
+      valEl.textContent = '"' + short + '"';
+      valEl.classList.add('filled');
+      stEl.textContent = stateLabel;
+
+      if (active) {
+        row.classList.add(clsMap[field]);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  FIRE JSON (button handler)
+    // ═══════════════════════════════════════════════════════════════════════════
+    function fireJSON() {
+      const raw = document.getElementById('jsonInput').value.trim();
+      const errEl = document.getElementById('jsonError');
+      errEl.textContent = '';
+
+      if (!raw) {
+        errEl.textContent = '⚠ Paste a JSON object first.';
+        return;
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch(e) {
+        errEl.textContent = '⚠ Invalid JSON — ' + e.message;
+        return;
+      }
+
+      if (!parsed.joke_start && !parsed.punchline) {
+        errEl.textContent = '⚠ JSON must have at least "joke_start" or "punchline".';
+        return;
+      }
+
+      onJokeMetadata(parsed);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  RESET
+    // ═══════════════════════════════════════════════════════════════════════════
+    function resetBear(silent = false) {
+      state         = 'idle';
+      laughT        = 0;
+      settleT       = 0;
+      mouthOpen     = 0;
+      bodyShake     = 0;
+      stomachBounce = 0;
+      headTiltAngle = 0;
+      headBobX      = 0;
+
+      if (!silent) {
+        document.getElementById('dispSetup').textContent     = '';
+        document.getElementById('dispPunchline').textContent = '';
+        document.getElementById('dispEnd').textContent       = '';
+        document.getElementById('jsonError').textContent     = '';
+
+        // Reset field rows
+        for (const [id, cls] of [['rowStart','active-start'],['rowPunch','active-punch'],['rowEnd','active-end']]) {
+          document.getElementById(id).classList.remove(cls);
+        }
+        document.getElementById('valStart').textContent = '—';
+        document.getElementById('valPunch').textContent = '—';
+        document.getElementById('valEnd').textContent   = '— (optional)';
+        document.getElementById('valStart').classList.remove('filled');
+        document.getElementById('valPunch').classList.remove('filled');
+        document.getElementById('valEnd').classList.remove('filled');
+        document.getElementById('stStart').textContent = 'waiting';
+        document.getElementById('stPunch').textContent = 'waiting';
+        document.getElementById('stEnd').textContent   = 'optional';
+
+        updateStateBadge();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  SKETCH HELPERS
+    // ═══════════════════════════════════════════════════════════════════════════
+    function wobble(v, w) { return v + (Math.random() - 0.5) * w; }
+
+    function sketchCircle(cx, cy, r, fill, wob = 1.5) {
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.09) {
+        const rr = r + (Math.random() - 0.5) * wob;
+        const x  = cx + Math.cos(a) * rr + (Math.random() - 0.5) * wob;
+        const y  = cy + Math.sin(a) * rr + (Math.random() - 0.5) * wob;
+        a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      ctx.stroke();
+    }
+
+    function sketchEllipse(cx, cy, rx, ry, fill, wob = 1.5) {
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.08) {
+        const rrx = rx + (Math.random() - 0.5) * wob;
+        const rry = ry + (Math.random() - 0.5) * wob;
+        const x   = cx + Math.cos(a) * rrx + (Math.random() - 0.5) * wob;
+        const y   = cy + Math.sin(a) * rry + (Math.random() - 0.5) * wob;
+        a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      ctx.stroke();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  DRAW
+    // ═══════════════════════════════════════════════════════════════════════════
+    function drawBear() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = C.line();
+      ctx.lineWidth   = 1.8;
+      ctx.lineCap     = 'round';
+      ctx.lineJoin    = 'round';
+
+      const cx = W / 2 + bodyShake;
+      const cy = H / 2 + 36;
+
+      // ── Body ──────────────────────────────────────────────────────────────────
+      ctx.save();
+      ctx.translate(cx, cy + stomachBounce * 0.3);
+      sketchEllipse(0, 0, 62, 76, C.skin(), 2);
+      sketchEllipse(0, 20, 36, 44, C.darkSkin(), 1.5);
+
+      // Laugh belly lines
+      if (state === 'laugh' && mouthOpen > 0.5) {
+        ctx.globalAlpha = mouthOpen * 0.3;
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 4; i++) {
+          const yy = -8 + i * 12;
+          ctx.beginPath();
+          ctx.moveTo(wobble(-26, 4), wobble(yy, 3));
+          ctx.quadraticCurveTo(wobble(0, 6), wobble(yy + 5, 4), wobble(26, 4), wobble(yy, 3));
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1; ctx.lineWidth = 1.8;
+      }
+      ctx.restore();
+
+      // ── Arms ──────────────────────────────────────────────────────────────────
+      const armSwing = (state === 'laugh') ? Math.sin(laughT * 0.28) * 14 : 0;
+      ctx.save(); ctx.translate(cx, cy);
+      for (const side of [-1, 1]) {
+        ctx.save();
+        ctx.translate(side * 62, -18);
+        ctx.rotate(side * 0.4 - side * armSwing * 0.04);
+        sketchEllipse(0, 0, 16, 37, C.skin(), 1.5);
+        sketchCircle(0, 36, 14, C.skin(), 1.5);
+        ctx.restore();
+      }
+      ctx.restore();
+
+      // ── Legs ──────────────────────────────────────────────────────────────────
+      ctx.save(); ctx.translate(cx, cy + 70);
+      for (const side of [-1, 1]) {
+        ctx.save(); ctx.translate(side * 33, 0);
+        sketchEllipse(0, 0, 19, 30, C.skin(), 1.5);
+        sketchEllipse(0, 29, 21, 13, C.darkSkin(), 1.5);
+        ctx.restore();
+      }
+      ctx.restore();
+
+      // ── Head ──────────────────────────────────────────────────────────────────
+      const headX = cx + headBobX;
+      const headY = cy - 102 + (state === 'laugh' ? Math.sin(laughT * 0.25) * 7 : 0)
+                              + (state === 'settle' ? Math.sin(settleT * 0.12) * 4 : 0);
+
+      ctx.save();
+      ctx.translate(headX, headY);
+      ctx.rotate(headTiltAngle);
+
+      // Head
+      sketchCircle(0, 0, 54, C.skin(), 2);
+
+      // Ears
+      for (const side of [-1, 1]) {
+        ctx.save(); ctx.translate(side * 44, -37);
+        sketchCircle(0, 0, 19, C.skin(), 2);
+        sketchCircle(0, 0, 10, C.darkSkin(), 1.5);
+        ctx.restore();
+      }
+
+      // Snout + nose
+      sketchEllipse(0, 19, 22, 16, C.darkSkin(), 1.5);
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.12) {
+        const rr = (a < Math.PI ? 9 : 7) + (Math.random() - 0.5) * 0.8;
+        const x  = Math.cos(a) * rr + (Math.random() - 0.5) * 0.8;
+        const y  = Math.sin(a) * (a < Math.PI ? 5.5 : 4.5) + 12 + (Math.random() - 0.5) * 0.8;
+        a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.fillStyle = C.line(); ctx.fill(); ctx.stroke();
+
+      // ── Eyes ──────────────────────────────────────────────────────────────────
+      const eyeY       = -9;
+      const eyeScale   = state === 'suspense' ? 1.5 : (state === 'laugh' || state === 'settle') ? 0.6 : 1;
+      const baseEyeR   = 11 * eyeScale;
+
+      for (const side of [-1, 1]) {
+        const ex = side * 21;
+        sketchCircle(ex, eyeY, baseEyeR, C.white(), 1);
+
+        if (blinkOpen > 0.1) {
+          const pupilR   = baseEyeR * 0.55 * blinkOpen;
+          const pupilDY  = state === 'suspense' ? 2 : 0;
+          sketchCircle(ex, eyeY + pupilDY, pupilR, darkMode ? '#666' : '#333', 0.5);
+
+          // Shine dot
+          ctx.beginPath();
+          ctx.arc(ex + pupilR * 0.3, eyeY + pupilDY - pupilR * 0.3, pupilR * 0.28, 0, Math.PI * 2);
+          ctx.fillStyle = C.white(); ctx.fill();
+
+          // Brow
+          const browLift = state === 'suspense' ? -9
+                         : (state === 'laugh')  ?  5
+                         : (state === 'settle') ?  2 : -2;
+          ctx.beginPath(); ctx.lineWidth = 2.5;
+          ctx.moveTo(ex - baseEyeR * 0.9, eyeY - baseEyeR - 2 + browLift + wobble(0,1));
+          ctx.quadraticCurveTo(
+            ex + wobble(0,1),
+            eyeY - baseEyeR - 8 + browLift + wobble(0,1),
+            ex + baseEyeR * 0.9,
+            eyeY - baseEyeR - 2 + browLift + wobble(0,1)
+          );
+          ctx.stroke(); ctx.lineWidth = 1.8;
+        } else {
+          // Blink squint
+          ctx.beginPath(); ctx.lineWidth = 3;
+          ctx.moveTo(ex - baseEyeR, eyeY);
+          ctx.quadraticCurveTo(ex, eyeY + baseEyeR * 0.5, ex + baseEyeR, eyeY);
+          ctx.stroke(); ctx.lineWidth = 1.8;
+        }
+      }
+
+      // ── Mouth ─────────────────────────────────────────────────────────────────
+      if (state === 'laugh') {
+        const mo = mouthOpen;
+        ctx.beginPath();
+        ctx.moveTo(-20, 27); ctx.quadraticCurveTo(0, 27 + 18*mo, 20, 27); ctx.stroke();
+
+        if (mo > 0.4) {
+          ctx.beginPath();
+          ctx.moveTo(-16, 28); ctx.quadraticCurveTo(0, 28 + 16*mo, 16, 28);
+          ctx.lineTo(10, 28 + 10*mo); ctx.quadraticCurveTo(0, 28 + 24*mo, -10, 28 + 10*mo);
+          ctx.closePath();
+          ctx.fillStyle = C.red(); ctx.fill();
+          ctx.strokeStyle = C.line(); ctx.stroke();
+        }
+        if (mo > 0.65) {
+          ctx.fillStyle = C.white();
+          for (const [tx, tw] of [[-11, 9], [2, 9]]) {
+            ctx.fillRect(tx, 29, tw, 6 * mo);
+            ctx.strokeStyle = C.line(); ctx.lineWidth = 0.8;
+            ctx.strokeRect(tx, 29, tw, 6 * mo); ctx.lineWidth = 1.8;
+          }
+        }
+        // Tears
+        if (mo > 0.78) {
+          ctx.strokeStyle = C.blue(); ctx.lineWidth = 1.3;
+          for (const side of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(side*24, eyeY+8);
+            ctx.quadraticCurveTo(side*32, eyeY+18, side*26, eyeY+26);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(side*26+wobble(0,2), eyeY+26+wobble(0,2), 2.5, 0, Math.PI*2);
+            ctx.fillStyle = C.blue(); ctx.fill();
+          }
+          ctx.strokeStyle = C.line(); ctx.lineWidth = 1.8;
+        }
+        // Blush
+        ctx.save(); ctx.globalAlpha = mo * 0.3;
+        sketchEllipse(-38, 10, 12, 7, C.blush(), 1);
+        sketchEllipse( 38, 10, 12, 7, C.blush(), 1);
+        ctx.restore();
+
+      } else if (state === 'suspense') {
+        const oWob = Math.sin(t * 0.05) * 2;
+        sketchEllipse(0, 30 + oWob, 7, 6, darkMode ? '#887755' : '#aa8855', 1);
+
+      } else if (state === 'settle') {
+        // Warm satisfied smile — wider than idle
+        const smileAmp = 0.5 + Math.sin(settleT * 0.06) * 0.1;
+        ctx.beginPath();
+        ctx.moveTo(wobble(-17,1), wobble(29,1));
+        ctx.quadraticCurveTo(wobble(0,1), wobble(38 + smileAmp*4,1), wobble(17,1), wobble(29,1));
+        ctx.stroke();
+        // Small blush linger
+        ctx.save(); ctx.globalAlpha = 0.18;
+        sketchEllipse(-36, 10, 11, 6, C.blush(), 1);
+        sketchEllipse( 36, 10, 11, 6, C.blush(), 1);
+        ctx.restore();
+
+      } else {
+        // Idle neutral smile
+        ctx.beginPath();
+        ctx.moveTo(wobble(-16,1), wobble(29,1));
+        ctx.quadraticCurveTo(wobble(0,1), wobble(38,1), wobble(16,1), wobble(29,1));
+        ctx.stroke();
+      }
+
+      // ── Suspense floaters ─────────────────────────────────────────────────────
+      if (state === 'suspense') {
+        ctx.save();
+        ctx.font = 'bold 16px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = C.line();
+        ctx.globalAlpha = Math.max(0.1, 0.5 + Math.sin(t * 0.07) * 0.35);
+        ctx.fillText('?', -64, -56 + Math.sin(t * 0.06) * 6);
+        ctx.globalAlpha = Math.max(0.1, 0.5 + Math.cos(t * 0.06) * 0.35);
+        ctx.fillText('...', 62, -48 + Math.cos(t * 0.05) * 5);
+        ctx.globalAlpha = Math.max(0.05, 0.3 + Math.sin(t * 0.04) * 0.2);
+        ctx.font = 'bold 12px Georgia, serif';
+        ctx.fillText('hmm', 0, -68 + Math.sin(t * 0.04) * 4);
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+
+      // ── Laugh bursts ──────────────────────────────────────────────────────────
+      if (state === 'laugh' && mouthOpen > 0.5) {
+        const bursts = ['HA!', 'HO!', 'HE!', 'HA!'];
+        ctx.save();
+        for (let i = 0; i < 4; i++) {
+          const angle = -0.8 + i * 0.55;
+          const dist  = 75 + Math.sin(laughT * 0.3 + i * 1.5) * 10;
+          const bx    = Math.cos(angle - Math.PI / 2) * dist;
+          const by    = Math.sin(angle - Math.PI / 2) * dist;
+          const sz    = 12 + Math.sin(laughT * 0.5 + i * 2) * 3;
+          ctx.globalAlpha = Math.max(0.05, 0.4 + Math.sin(laughT * 0.5 + i * 2) * 0.45);
+          ctx.font = `bold ${sz}px Georgia, serif`;
+          ctx.textAlign = 'center';
+          ctx.fillStyle = C.burst();
+          ctx.fillText(bursts[i], bx + wobble(0,2), by - 16 + wobble(0,2));
+        }
+        ctx.restore();
+      }
+
+      // ── Settle: gentle nod indicator ──────────────────────────────────────────
+      if (state === 'settle') {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 0.6 - settleT * 0.008);
+        ctx.font = '13px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = C.burst();
+        ctx.fillText('😌', 0, -68);
+        ctx.restore();
+      }
+
+      ctx.restore(); // end head transform
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  UPDATE
+    // ═══════════════════════════════════════════════════════════════════════════
+    function update() {
+      t++;
+      blinkTimer++;
+
+      if (blinkTimer > 110 + Math.floor(Math.random() * 80)) blinkTimer = 0;
+      if (blinkTimer < 8) {
+        blinkOpen = Math.max(0, 1 - blinkTimer / 4);
+      } else if (blinkOpen < 1) {
+        blinkOpen = Math.min(1, blinkOpen + 0.18);
+      }
+
+      // ── Idle ──────────────────────────────────────────────────────────────────
+      if (state === 'idle') {
+        headBobX      = Math.sin(t * 0.04) * 6;
+        headTiltAngle = Math.sin(t * 0.035) * 0.04;
+        stomachBounce = Math.sin(t * 0.05) * 2;
+        bodyShake     = 0;
+        mouthOpen     = 0;
+      }
+
+      // ── Suspense ──────────────────────────────────────────────────────────────
+      if (state === 'suspense') {
+        headBobX      = Math.sin(t * 0.055) * 10;
+        headTiltAngle = Math.sin(t * 0.04) * 0.07;
+        stomachBounce = Math.sin(t * 0.06) * 2;
+        bodyShake     = Math.sin(t * 0.09) * 1.5;
+        mouthOpen     = 0;
+      }
+
+      // ── Laugh ─────────────────────────────────────────────────────────────────
+      if (state === 'laugh') {
+        laughT++;
+        const prog    = Math.min(1, laughT / 55);
+        mouthOpen     = prog;
+        headTiltAngle = Math.sin(laughT * 0.18) * 0.22 + 0.15;
+        headBobX      = Math.sin(laughT * 0.26) * 14;
+        bodyShake     = Math.sin(laughT * 0.38) * (6 * prog);
+        stomachBounce = Math.sin(laughT * 0.32) * (13 * prog);
+
+        // Settle naturally if no joke_end arrives
+        if (laughT > 360) {
+          const s = Math.max(0, 1 - (laughT - 360) / 120);
+          mouthOpen     = s;
+          bodyShake    *= s;
+          stomachBounce *= s;
+          if (laughT > 480) { setState('idle'); updateStateBadge(); }
+        }
+      }
+
+      // ── Settle (gentle nod after joke_end) ────────────────────────────────────
+      if (state === 'settle') {
+        settleT++;
+        const s       = Math.max(0, 1 - settleT / 90);
+        mouthOpen     = 0;
+        bodyShake     = 0;
+        stomachBounce = Math.sin(settleT * 0.1) * 3 * s;
+        headTiltAngle = Math.sin(settleT * 0.12) * 0.06 * s;
+        headBobX      = Math.sin(settleT * 0.08) * 4 * s;
+
+        if (settleT > 130) { setState('idle'); updateStateBadge(); }
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  LOOP
+    // ═══════════════════════════════════════════════════════════════════════════
+    function loop() {
+      update();
+      drawBear();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+</script>
+</body>
+</html>

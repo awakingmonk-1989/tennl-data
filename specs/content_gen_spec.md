@@ -760,7 +760,105 @@ Always weave in India-specific references naturally:
 
 ---
 
-## PART 13: CONTENT QUALITY CHECKLIST
+## PART 13: THEME SELECTION & THEME CONSISTENCY (ENHANCEMENT — NON-OVERRIDING)
+
+This section adds a **theme selection layer** that guides the “angle” of an article. It does not change or replace any existing requirements in Parts 1–12 (safety, structure, sources, word counts, options, or rendering).
+
+### 13.1 Mandatory theme declaration (root JSON)
+
+Every generated article MUST declare a theme in the root JSON:
+
+```json
+"theme": {
+  "primary": "Best Practices",
+  "secondary": "Curiosity-driven framing"
+}
+```
+
+And MUST declare whether a theme override was used:
+
+```json
+"theme_override": {
+  "used": false,
+  "reason": null
+}
+```
+
+### 13.2 Theme taxonomy (required)
+
+Every article must map to:
+- exactly **one primary theme**
+- optional **one secondary theme** (max 1)
+
+Primary themes (choose 1):
+- Knowledge Sharing
+- Compare & Contrast
+- Best Practices
+- Safe Tips / Preventive Insights
+- Optimal Experiences
+- Habit Formation / Behavior Change
+- Cultural / India-specific Nuance
+- Myth vs Reality
+- Quick Wins / Immediate Actions
+
+Secondary themes (optional; choose 0 or 1):
+- Storytelling / Narrative hook
+- Data-backed credibility
+- Emotional relatability
+- Curiosity-driven framing
+- Experiment / Try-this framing
+
+### 13.3 Theme selection rules (strict)
+
+- **Topic fit**: Theme must match the `topic` + `sub_topic` intent (no forced angles).
+- **Engagement, not clickbait**: The theme should increase click → read → share, but cannot become sensational or manipulative.
+- **Avoid generic treatment**: “Listicles by default” are not acceptable unless the idea genuinely requires a list per existing quality standards.
+- **Safety-first**: Theme cannot be used to introduce forbidden categories (politics, controversy, fear-based framing, named real persons in body, sports/movies references, etc.).
+
+### 13.4 Theme → writing alignment (guidance)
+
+Theme must influence: hero descriptor, hook framing, section titles, and the quick reference wording.
+
+| Primary theme | Writing intent (additive) |
+|---|---|
+| Knowledge Sharing | Clear, insightful, lightly educational; avoids textbook tone |
+| Compare & Contrast | Decision clarity; contrasts trade-offs without judgement |
+| Best Practices | Actionable defaults; specific “do this, because” reasoning |
+| Safe Tips / Preventive Insights | Calm, preventive framing; no fear or anxiety hooks |
+| Optimal Experiences | Quality-of-life upgrade tone; “make life smoother” energy |
+| Habit Formation / Behavior Change | Triggers, routines, friction design; compassionate tone |
+| Cultural / India-specific Nuance | Local relatability as substance, not garnish |
+| Myth vs Reality | Counterintuitive reframes; respectful, non-snarky corrections |
+| Quick Wins / Immediate Actions | Immediate, low-effort actions; tight and energising |
+
+Secondary themes are modifiers (optional) — they should shape how the primary theme is delivered (e.g., “Data-backed credibility” adds one strong stat/source anchor; “Experiment” adds a try-this-for-7-days framing).
+
+### 13.5 Theme consistency (strict)
+
+The chosen theme MUST be recognisable in:
+- the page-level `hero.descriptor`
+- the `hook` (quote banner or lede)
+- section titles and section bodies (overall angle; not necessarily repeated wording)
+- the `quick_reference` (action items should match the angle)
+
+### 13.6 Creativity override clause (controlled drift)
+
+If the agent chooses a theme different from the obvious/default mapping for the input topic/sub-topic, it may do so ONLY when the alternative is **clearly more compelling** and improves:
+- curiosity
+- relatability
+- shareability
+
+When used, the agent MUST set:
+
+```json
+"theme_override": { "used": true, "reason": "..." }
+```
+
+`reason` must be a specific, plain-English justification (not generic “more engaging”).
+
+---
+
+## PART 14: CONTENT QUALITY CHECKLIST
 
 Before any article is considered complete and files are output, verify every point:
 
@@ -823,7 +921,7 @@ Before any article is considered complete and files are output, verify every poi
 
 ---
 
-## PART 14: EXAMPLE DECISION WALKTHROUGH
+## PART 15: EXAMPLE DECISION WALKTHROUGH
 
 ### Life Hacks — Focus & Attention article
 

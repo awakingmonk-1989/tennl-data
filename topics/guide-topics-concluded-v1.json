@@ -1,0 +1,242 @@
+{
+  "topics": [
+    {
+      "name": "Career & Growth",
+      "subtopics": [
+        {"name": "Skill Building Journeys", "description": "Build skills step by step at your own pace."},
+        {"name": "Career Switch Stories", "description": "Learn from real transitions and new beginnings."},
+        {"name": "Workplace Productivity", "description": "Make your workday smoother and more focused."},
+        {"name": "Remote Work Lifestyle", "description": "Balance flexibility with consistent output."},
+        {"name": "Portfolio & Personal Branding", "description": "Present your work with clarity and confidence."},
+        {"name": "Freelancing & Independent Work", "description": "Explore working on your own terms."},
+        {"name": "Mentorship & Guidance", "description": "Share and seek practical career advice."}
+      ]
+    },
+    {
+      "name": "Health & Wellbeing",
+      "subtopics": [
+        {"name": "Daily Fitness Routines", "description": "Stay active with simple daily movements."},
+        {"name": "Healthy Eating Habits", "description": "Make mindful and balanced food choices."},
+        {"name": "Mental Wellness Practices", "description": "Care for your mind with small habits."},
+        {"name": "Sleep & Recovery", "description": "Rest well to feel better each day."},
+        {"name": "Mindful Living", "description": "Slow down and stay present."},
+        {"name": "Preventive Health Care", "description": "Small steps today for long-term wellbeing."},
+        {"name": "Holistic Wellness", "description": "Balance body, mind, and routine."}
+      ]
+    },
+    {
+      "name": "Food & Culinary Exploration",
+      "subtopics": [
+        {"name": "Home Cooking Creations", "description": "Share what you cook and enjoy at home."},
+        {"name": "Regional Food Traditions", "description": "Discover tastes rooted in culture."},
+        {"name": "Healthy Recipes", "description": "Cook meals that feel good and nourishing."},
+        {"name": "Street Food Discoveries", "description": "Explore flavors from local streets."},
+        {"name": "Seasonal Cooking", "description": "Cook with what the season offers."},
+        {"name": "Food Presentation & Styling", "description": "Make food look as good as it tastes."},
+        {"name": "Kitchen Hacks & Tips", "description": "Simple tricks that make cooking easier."}
+      ]
+    },
+    {
+      "name": "Travel & Exploration",
+      "subtopics": [
+        {"name": "Local Exploration Guides", "description": "Find interesting places around you."},
+        {"name": "Nature Escapes", "description": "Spend time in calm and natural settings."},
+        {"name": "Cultural Experiences", "description": "Experience traditions and local life."},
+        {"name": "Budget Travel Ideas", "description": "Travel smart without overspending."},
+        {"name": "Travel Planning Tips", "description": "Plan better trips with useful insights."},
+        {"name": "Hidden Gems & Offbeat Places", "description": "Discover places less explored."},
+        {"name": "Slow Travel Stories", "description": "Travel with time and intention."}
+      ]
+    },
+    {
+      "name": "Creativity & Art",
+      "subtopics": [
+        {"name": "DIY & Craft Projects", "description": "Create something with your hands."},
+        {"name": "Drawing & Illustration", "description": "Express ideas through visuals."},
+        {"name": "Handmade Creations", "description": "Share unique things you make."},
+        {"name": "Creative Challenges", "description": "Try new ideas and creative exercises."},
+        {"name": "Art Journaling", "description": "Capture thoughts through art and notes."},
+        {"name": "Upcycling Ideas", "description": "Turn old things into something useful."},
+        {"name": "Visual Storytelling", "description": "Tell stories through images and design."}
+      ]
+    },
+    {
+      "name": "Writing & Expression",
+      "subtopics": [
+        {"name": "Personal Storytelling", "description": "Share stories from your own experiences."},
+        {"name": "Poetry & Creative Writing", "description": "Express thoughts in creative forms."},
+        {"name": "Blogging Ideas", "description": "Write about topics you care about."},
+        {"name": "Reflective Writing", "description": "Pause and write with clarity."},
+        {"name": "Guided Creative Writing(AI)", "description": "Get gentle direction to start writing."},
+        {"name": "Thought Pieces", "description": "Share opinions with depth and clarity."}
+      ]
+    },
+    {
+      "name": "Learning & Knowledge",
+      "subtopics": [
+        {"name": "Everyday Learning", "description": "Learn something new every day."},
+        {"name": "Curiosity Topics", "description": "Explore things that spark your interest."},
+        {"name": "Self-Learning Techniques", "description": "Learn in ways that suit you best."},
+        {"name": "Concept Simplification", "description": "Break complex ideas into simple parts."},
+        {"name": "Knowledge Sharing", "description": "Share what you know with others."},
+        {"name": "Reading Insights", "description": "Reflect on what you read."},
+        {"name": "Practical Learning", "description": "Share how you learn by doing and applying."}
+      ]
+    },
+    {
+      "name": "Hobbies & Leisure",
+      "subtopics": [
+        {"name": "Indoor Hobbies", "description": "Enjoy activities you can do at home."},
+        {"name": "Outdoor Activities", "description": "Spend time outside doing what you enjoy."},
+        {"name": "Collecting & Curating", "description": "Build and organize things you value."},
+        {"name": "Creative Pastimes", "description": "Spend time on relaxing creative work."},
+        {"name": "Weekend Activities", "description": "Make your weekends more enjoyable."},
+        {"name": "Relaxation Practices", "description": "Take time to unwind and reset."},
+        {"name": "Hobby Showcases", "description": "Share what you enjoy doing."}
+      ]
+    },
+    {
+      "name": "Personal Development",
+      "subtopics": [
+        {"name": "Habit Building", "description": "Build routines that support your growth."},
+        {"name": "Goal Setting", "description": "Set clear and achievable goals."},
+        {"name": "Time Management", "description": "Use your time with intention."},
+        {"name": "Self Discipline", "description": "Stay consistent with your efforts."},
+        {"name": "Confidence Building", "description": "Grow your self-belief steadily."},
+        {"name": "Focus & Clarity", "description": "Work with clear direction."},
+        {"name": "Growth Mindset", "description": "Keep learning and improving."}
+      ]
+    },
+    {
+      "name": "Culture & Traditions",
+      "subtopics": [
+        {"name": "Local Traditions", "description": "Learn and share local customs."},
+        {"name": "Festivals & Celebrations", "description": "Celebrate meaningful occasions."},
+        {"name": "Cultural Stories", "description": "Share stories rooted in culture."},
+        {"name": "Heritage Practices", "description": "Keep traditions alive through sharing."},
+        {"name": "Community Experiences", "description": "Engage with people and communities."},
+        {"name": "Traditional Arts", "description": "Explore time-honored art forms."},
+        {"name": "Lifestyle Rituals", "description": "Practice routines shaped by culture."}
+      ]
+    },
+    {
+      "name": "Home & Living",
+      "subtopics": [
+        {"name": "Home Organization", "description": "Keep your space simple and tidy."},
+        {"name": "Minimal Living", "description": "Live with less and focus on what matters."},
+        {"name": "Interior Styling Ideas", "description": "Explore ideas for styling real living spaces."},
+        {"name": "Daily Living Hacks", "description": "Simplify everyday tasks."},
+        {"name": "Sustainable Living", "description": "Make choices that reduce impact."},
+        {"name": "Comfort Spaces", "description": "Create and share ideas for calm, livable spaces."},
+        {"name": "Home Productivity", "description": "Stay productive from your home space."}
+      ]
+    },
+    {
+      "name": "Nature & Environment",
+      "subtopics": [
+        {"name": "Nature Appreciation", "description": "Notice and enjoy natural surroundings."},
+        {"name": "Gardening & Plants", "description": "Grow and care for plants."},
+        {"name": "Eco-Friendly Living", "description": "Make small sustainable changes."},
+        {"name": "Wildlife Awareness", "description": "Learn about animals and habitats."},
+        {"name": "Outdoor Mindfulness", "description": "Stay present in natural settings."},
+        {"name": "Natural Remedies", "description": "Explore simple natural practices."},
+        {"name": "Seasonal Changes", "description": "Observe how seasons shift around you."}
+      ]
+    },
+    {
+      "name": "Technology for Life",
+      "subtopics": [
+        {"name": "Useful Everyday Tools", "description": "Discover tools that make life easier."},
+        {"name": "Productivity Apps", "description": "Use apps to stay organized."},
+        {"name": "Digital Organization", "description": "Keep your digital space clean."},
+        {"name": "Learning Tech Skills", "description": "Build useful digital skills."},
+        {"name": "Automation for Daily Life", "description": "Save time with simple automation."},
+        {"name": "Digital Creativity", "description": "Create using digital tools."},
+        {"name": "Responsible Tech Use", "description": "Use technology with awareness."}
+      ]
+    },
+    {
+      "name": "Coaching & Guidance",
+      "subtopics": [
+        {"name": "Life Coaching Insights", "description": "Reflect and grow with guidance."},
+        {"name": "Career Guidance", "description": "Get direction for your career path."},
+        {"name": "Habit Coaching", "description": "Improve habits with small steps."},
+        {"name": "Skill Mentorship", "description": "Learn from experienced individuals."},
+        {"name": "Decision Making", "description": "Make thoughtful and clear decisions."},
+        {"name": "Productivity Coaching", "description": "Improve how you work daily."},
+        {"name": "Self Reflection Practices", "description": "Take time to understand yourself."}
+      ]
+    },
+    {
+      "name": "Entrepreneurship & Ideas",
+      "subtopics": [
+        {"name": "Idea Exploration", "description": "Exploring new ideas is always worthwhile. Share your thoughts."},
+        {"name": "Problem Solving Thinking", "description": "Approach challenges with clarity and structure."},
+        {"name": "Small Projects", "description": "Share experiences of starting small and building step by step."},
+        {"name": "Independent Creators", "description": "Share and learn from individual creators."},
+        {"name": "Business Basics", "description": "Understand simple business fundamentals."},
+        {"name": "Customer Understanding", "description": "Learn what people truly need."},
+        {"name": "Creative Monetization", "description": "Turn ideas into meaningful outcomes."}
+      ]
+    },
+    {
+      "name": "Education & Skill Building",
+      "subtopics": [
+        {"name": "Study Techniques", "description": "Share and learn methods that improve understanding."},
+        {"name": "Concept Mastery", "description": "Build strong foundations in topics."},
+        {"name": "Practical Learning", "description": "Share how you learn by doing and applying."},
+        {"name": "Skill Challenges", "description": "Improve through consistent practice."},
+        {"name": "Teaching & Sharing", "description": "Teach others what you know."},
+        {"name": "Learning Paths", "description": "Explore and share structured ways of learning."},
+        {"name": "Peer Learning", "description": "Learn together with others."}
+      ]
+    },
+    {
+      "name": "Relationships & Social Life",
+      "subtopics": [
+        {"name": "Meaningful Conversations", "description": "Share conversations that carry purpose and depth."},
+        {"name": "Building Connections", "description": "Share ways to build genuine connections."},
+        {"name": "Communication Skills", "description": "Share ways to express clearly and listen better."},
+        {"name": "Social Etiquette", "description": "Share thoughtful ways to interact with others."},
+        {"name": "Community Building", "description": "Bring people together meaningfully."},
+        {"name": "Empathy & Understanding", "description": "Share perspectives that help understand others."}
+      ]
+    },
+    {
+      "name": "Productivity & Focus",
+      "subtopics": [
+        {"name": "Deep Work Practices", "description": "Focus deeply on important tasks."},
+        {"name": "Focus Techniques", "description": "Improve how you concentrate."},
+        {"name": "Work-Life Balance", "description": "Balance work with personal time."},
+        {"name": "Planning Systems", "description": "Share ways to organize tasks effectively."},
+        {"name": "Routine Design", "description": "Share routines that support your day."},
+        {"name": "Daily Energy & Focus", "description": "Stay steady and attentive through the day."},
+        {"name": "Distraction Control", "description": "Share ways to stay focused and reduce interruptions."}
+      ]
+    },
+    {
+      "name": "Lifestyle & Daily Living",
+      "subtopics": [
+        {"name": "Morning & Evening Routines", "description": "Start and end your day well."},
+        {"name": "Simple Living Practices", "description": "Keep life simple and manageable."},
+        {"name": "Personal Organization", "description": "Stay organized in daily life."},
+        {"name": "Life Hacks", "description": "Make small improvements in routines."},
+        {"name": "Daily Inspiration", "description": "Find small moments of motivation."},
+        {"name": "Mindful Consumption", "description": "Choose what you consume carefully."},
+        {"name": "Balanced Living", "description": "Share ways to maintain balance in daily life."}
+      ]
+    },
+    {
+      "name": "Inspiration & Stories",
+      "subtopics": [
+        {"name": "Real Life Stories", "description": "Share stories from real experiences."},
+        {"name": "Personal Journeys", "description": "Talk about your path and progress."},
+        {"name": "Lessons Learned", "description": "Share insights from experience."},
+        {"name": "Small Wins", "description": "Celebrate small achievements."},
+        {"name": "Transformation Stories", "description": "Share meaningful changes."},
+        {"name": "Everyday Inspirations", "description": "Find inspiration in daily life."},
+        {"name": "Community Highlights", "description": "Highlight stories from the community."}
+      ]
+    }
+  ]
+}

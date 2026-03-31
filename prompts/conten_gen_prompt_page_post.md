@@ -135,6 +135,11 @@ OUTPUT YOU MUST PRODUCE:
   1. The complete article body in clean markdown
   2. The complete JSON object at the end, fully typed per JSON Schema Spec v1.0
 
+IMPORTANT OUTPUT SCOPE:
+  - Do NOT generate HTML in this run.
+  - Do NOT describe HTML/CSS/JS or UI templates in the article body.
+  - UI rendering (including optional `{slug}.html`) is handled separately via an HTML rendering skill.
+
 One article per run. One PAGE composed of 3–5 POSTS. Some posts may have
 one DEEP DIVE each. Hierarchy as defined in Part 0 above — always.
 

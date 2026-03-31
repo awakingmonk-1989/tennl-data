@@ -887,7 +887,6 @@ Validation: tonal_arc.length and content_option_sequence.length must both equal 
 ```json
 "file_references": {
   "md": "lifehacks_focus.md",
-  "html": "lifehacks_focus.html",
   "json": "lifehacks_focus.json"
 },
 "generation_meta": {
@@ -901,7 +900,7 @@ Validation: tonal_arc.length and content_option_sequence.length must both equal 
 }
 ```
 
-All three file_references fields required. All three spec_versions fields required.
+Both file_references fields (`md`, `json`) are required. All three spec_versions fields required.
 
 ---
 
@@ -950,7 +949,7 @@ All display-related enum values and their UI rendering intent:
 | Button null | deep_dive_button is null when sub_sections is null | REJECT |
 | Card IDs valid | Every card_grid item sub_section_id matches a sub_sections id | REJECT |
 | Array lengths | tonal_arc.length == content_option_sequence.length == sections.length | REJECT |
-| File references | All three populated | REJECT |
+| File references | Both (`md`, `json`) populated | REJECT |
 | Excluded sources | Contains "Reddit" and "Quora" | REJECT |
 | Steps max | Option 4 steps <= 6, Variant A steps <= 6 | REJECT |
 | Items min/max | Option 3: 3–5, Option 5: 2–4, Variant B: 3–6 | REJECT |

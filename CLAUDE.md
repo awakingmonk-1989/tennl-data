@@ -87,6 +87,7 @@ If you drift, you must set `theme_override.used = true` in JSON and provide a **
 | Content Moderation | `/skills/content_moderation/SKILL.md` | Checking any content against safety rules before output |
 | Creativity & Narration | `/skills/creativity_narration/SKILL.md` | Evaluating and improving narrative quality, visual flow alignment, and storytelling richness |
 | Schema Validation | `/skills/schema_validation/SKILL.md` | Validating generated JSON output against JSON Schema Spec v1.0 |
+| HTML Content Rendering (Optional) | `/skills/skill_html_generation.md` | Render a standalone `{slug}.html` from the already-generated MD + JSON (presentation only; does not change content) |
 
 **Skill invocation order for a standard generation run:**
 1. Content Generation skill → produces article body + JSON
@@ -149,6 +150,10 @@ content_variant: "CURATED_WEB_WITH_IMAGES" | "CURATED_WEB_NO_IMAGES" | "AI_GENER
 Every generation run produces:
 1. Complete article body in clean markdown
 2. Complete JSON object typed per JSON Schema Spec v1.0
+
+**UI rendering is decoupled:**
+- The core run outputs **MD + JSON only**.
+- Any HTML output is generated only by invoking the optional HTML rendering skill.
 
 One article per run. One page. 3–5 posts. Deep dives where applicable.
 

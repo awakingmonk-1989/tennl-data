@@ -30,6 +30,8 @@ All three specs must be present for a valid agent run:
   "slug": "lifehacks_focus",
   "category_path": "Lifestyle & Daily Living › Life Hacks › Focus & Attention",
   "target_audience": "India — Urban Adults 18–45",
+  "theme": {},
+  "theme_override": {},
   "word_count_meta": {},
   "content_safety": {},
   "hero": {},
@@ -47,6 +49,46 @@ All three specs must be present for a valid agent run:
   "generation_meta": {}
 }
 ```
+
+---
+
+## SECTION 0A: THEME METADATA (ENHANCEMENT — NON-BREAKING EXTENSION)
+
+Theme metadata is an **additive** root-level layer that records the article’s chosen “angle”. It must not change any existing safety or structure requirements; it only makes theme selection explicit and enforceable.
+
+### 0A.1 Theme object (required)
+
+```json
+"theme": {
+  "primary": "Best Practices",
+  "secondary": "Curiosity-driven framing"
+}
+```
+
+| Field | Type | Required | Enum Values | Rules |
+|---|---|---|---|---|
+| primary | enum | YES | "Knowledge Sharing", "Compare & Contrast", "Best Practices", "Safe Tips / Preventive Insights", "Optimal Experiences", "Habit Formation / Behavior Change", "Cultural / India-specific Nuance", "Myth vs Reality", "Quick Wins / Immediate Actions" | Choose exactly 1 primary theme |
+| secondary | enum or null | YES | "Storytelling / Narrative hook", "Data-backed credibility", "Emotional relatability", "Curiosity-driven framing", "Experiment / Try-this framing" | Optional; must be null or one value (max 1) |
+
+### 0A.2 Theme override object (required)
+
+```json
+"theme_override": {
+  "used": false,
+  "reason": null
+}
+```
+
+| Field | Type | Required | Rules |
+|---|---|---|---|
+| used | boolean | YES | true only when the agent deliberately deviates from the most “obvious” theme mapping for the given input |
+| reason | string or null | YES | Must be non-null and specific when used=true. Must be null when used=false |
+
+Validation:
+- theme.primary missing → REJECT
+- theme.secondary present but not in enum → REJECT
+- theme_override.used=true and theme_override.reason is null/empty → REJECT
+- theme_override.used=false and reason is non-null → REJECT
 
 ---
 
@@ -900,6 +942,8 @@ All display-related enum values and their UI rendering intent:
 | Sub-section cap | sub_sections[n].word_count <= 500 | REJECT |
 | Safety flags | All false except is_content_safe true | REJECT |
 | Exclusive word tier | is_short_read and is_medium_content not both true | REJECT |
+| Theme present | theme.primary exists and is valid enum | REJECT |
+| Theme override reason | theme_override.used=true → reason non-null; used=false → reason null | REJECT |
 | No consecutive options | content_option_sequence[n] != sequence[n+1] | REJECT |
 | Quote consistency | hero.quote_banner.enabled matches hook.type | REJECT |
 | Ambient card null | ambient_card is null when content_option != "2" | REJECT |

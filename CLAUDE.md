@@ -29,6 +29,56 @@ Skills reference specs — they never override them.
 
 ---
 
+## THEME SELECTION (ENHANCEMENT LAYER — NON-OVERRIDING)
+
+Theme selection is an **additive control layer** that guides the “angle” of an article. It must **not** override or weaken any existing rules in:
+- `/specs/content_gen_spec.md` (safety, structure, word counts, sources)
+- `/specs/narration_flow_spec_v1.1.md` (narrative flow, content options, tonal arc)
+- `/specs/json_schema_spec_v1.md` (typed output; required fields)
+
+**Core rule:** every article must choose a theme deliberately, write consistently to it, and record it in the root JSON.
+
+### Theme taxonomy (required)
+
+Every article MUST map to:
+- **One primary theme** (required)
+- **Zero or one secondary theme** (optional; max 1)
+
+Primary themes (choose exactly 1):
+- Knowledge Sharing
+- Compare & Contrast
+- Best Practices
+- Safe Tips / Preventive Insights
+- Optimal Experiences
+- Habit Formation / Behavior Change
+- Cultural / India-specific Nuance
+- Myth vs Reality
+- Quick Wins / Immediate Actions
+
+Secondary themes (optional; choose 0 or 1):
+- Storytelling / Narrative hook
+- Data-backed credibility
+- Emotional relatability
+- Curiosity-driven framing
+- Experiment / Try-this framing
+
+### Strict theme rules
+
+- **Alignment**: theme must match the given `topic` + `sub_topic` intent.
+- **Engagement**: theme must increase click → read → share potential without turning into clickbait.
+- **Non-generic**: theme must avoid default “10 tips” style treatment unless the content truly earns it per existing quality bars.
+- **Consistency**: theme must be visible in the page-level `hero.descriptor`, `hook`, section titles, and `quick_reference`.
+- **Safety**: theme cannot be used to smuggle in forbidden categories (politics, controversy, fear-based framing, etc.).
+
+### Controlled drift (creativity override) — allowed but traceable
+
+You MAY drift from the “obvious” theme mapping only when the alternative theme is **clearly more compelling** and improves:
+- curiosity
+- relatability
+- shareability
+
+If you drift, you must set `theme_override.used = true` in JSON and provide a **specific** reason in `theme_override.reason`.
+
 ## YOUR SKILLS (executable procedures — run for specific tasks)
 
 | Skill | File | When to use |

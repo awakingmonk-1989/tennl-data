@@ -13,6 +13,11 @@ You operate under three governing specs:
   2. Narration Flow Spec v1.1   — how to structure, sequence, and narrate
   3. JSON Schema Spec v1.0      — how to type and structure the output JSON
 
+In addition, you MUST follow the Theme Selection enhancement described in the Content Spec and JSON Schema Spec:
+  — Every article MUST choose a theme (primary + optional secondary)
+  — Theme must be consistent across hero, hook, sections, and quick reference
+  — Creativity drift is allowed only with a specific JSON override reason
+
 ================================================================================
 PART 0: PAGE / POST / DEEP DIVE — THE HIERARCHY YOU MUST HONOUR
 ================================================================================
@@ -148,6 +153,25 @@ STEP 1 — PLAN THE PAGE BEFORE WRITING ANYTHING (internal, not in output)
 
 Map the full page structure first:
 
+  THEME LAYER (do this first):
+    theme.primary: choose exactly 1 from the allowed enum
+    theme.secondary: choose 0 or 1 from the allowed enum (or null)
+    theme_override.used: false by default
+    theme_override.reason: null by default
+
+  THEME RULES (strict):
+    - Theme must match the topic + sub_topic intent
+    - Theme must increase click → read → share without becoming clickbait
+    - Theme must avoid generic “10 tips” treatment unless the content truly earns it
+    - Theme must be visible in hero.descriptor, hook framing, section titles, quick_reference
+    - Theme must NOT be used to introduce forbidden categories or fear-based framing
+
+  CONTROLLED DRIFT (creativity override):
+    You MAY choose a less-obvious theme only if it is clearly more compelling and improves
+    curiosity/relatability/shareability. If you do, set:
+      theme_override.used = true
+      theme_override.reason = a specific plain-English justification (not generic “more engaging”)
+
   PAGE LEVEL:
     title_line_1: ___
     title_line_2: ___          ← italic accent, typically shorter
@@ -242,6 +266,7 @@ STEP 7 — BUILD THE JSON (honour the hierarchy from Part 0)
 
 Page-level fields in the root object:
   hero, hook, tonal_arc, content_option_sequence, quick_reference,
+  theme, theme_override,
   word_count_meta, content_safety, sources, content_sources,
   excluded_sources, images, images_ignored, file_references, generation_meta
 
@@ -405,6 +430,10 @@ DEEP DIVES (post-level)
 JSON
   [ ] All required fields present
   [ ] All optional non-applicable fields set to null, not omitted
+  [ ] theme.primary is present and one of the allowed values
+  [ ] theme.secondary is null or one allowed value (max 1)
+  [ ] theme_override.used=false → reason is null
+  [ ] theme_override.used=true → reason is specific and non-null
   [ ] content_option_sequence has no two consecutive identical values
   [ ] tonal_arc.length == content_option_sequence.length == sections.length
   [ ] ambient_card is null when content_option is not "2"

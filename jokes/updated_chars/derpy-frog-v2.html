@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Derpy Frog — Joke Reactor v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Kalam:wght@300;400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Kalam', cursive;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E"),
+      linear-gradient(168deg, #f7f3e9 0%, #efe8d6 40%, #f2edd8 100%);
+    z-index: -1;
+  }
+
+  .stage-wrap {
+    position: relative;
+    width: min(520px, 95vw);
+    aspect-ratio: 1;
+    margin-top: 20px;
+  }
+
+  canvas#main { width: 100%; height: 100%; display: block; }
+
+  .bubble {
+    position: absolute;
+    top: 4%;
+    right: -2%;
+    width: 50%;
+    min-height: 60px;
+    background: #fffef8;
+    border: 2.5px solid #3a3226;
+    border-radius: 18px 18px 18px 4px;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: #3a3226;
+    box-shadow: 2px 3px 0 rgba(0,0,0,0.06);
+    opacity: 0;
+    transform: scale(0.8) translateY(8px);
+    transition: opacity 0.4s, transform 0.4s;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .bubble.visible { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+  .bubble::after {
+    content: '';
+    position: absolute;
+    bottom: 12px; left: -14px;
+    width: 0; height: 0;
+    border: 7px solid transparent;
+    border-right-color: #3a3226;
+  }
+
+  .bubble .setup { display: block; margin-bottom: 6px; }
+  .bubble .punchline {
+    display: block;
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #9b4500;
+  }
+  .bubble .thinking { color: #999; font-size: 0.85rem; font-style: italic; }
+
+  .controls {
+    margin-top: 12px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-bottom: 30px;
+  }
+
+  button {
+    font-family: 'Kalam', cursive;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 10px 26px;
+    border: 2.5px solid #3a3226;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+  }
+
+  .btn-joke { background: #4a7c59; color: #f7f3e9; }
+  .btn-joke:hover { background: #3a6348; transform: translate(-1px,-1px); box-shadow: 4px 4px 0 rgba(0,0,0,0.15); }
+  .btn-skip { background: #f7f3e9; color: #3a3226; }
+  .btn-skip:hover { background: #3a3226; color: #f7f3e9; }
+  button:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  .phase-tag {
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    color: #8a7d6b;
+    text-align: center;
+    margin-top: 6px;
+    min-height: 26px;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage-wrap">
+  <canvas id="main" width="1040" height="1040"></canvas>
+  <div class="bubble" id="bubble"></div>
+</div>
+<div class="phase-tag" id="phaseTag">idle</div>
+<div class="controls">
+  <button class="btn-joke" id="jokeBtn">Tell a Joke</button>
+  <button class="btn-skip" id="skipBtn">Skip to Laugh</button>
+</div>
+
+<script>
+const W = 1040, H = 1040;
+const canvas = document.getElementById('main');
+const ctx = canvas.getContext('2d');
+
+const jokes = [
+  { setup: "Why don't scientists trust atoms?", punchline: "Because they make up everything!" },
+  { setup: "What do you call a fake noodle?", punchline: "An impasta!" },
+  { setup: "Why did the scarecrow win an award?", punchline: "He was outstanding in his field!" },
+  { setup: "What do you call a bear with no teeth?", punchline: "A gummy bear!" },
+  { setup: "Why don't eggs tell jokes?", punchline: "They'd crack each other up!" },
+  { setup: "What did the ocean say to the beach?", punchline: "Nothing, it just waved." },
+  { setup: "Why did the bicycle fall over?", punchline: "Because it was two-tired!" },
+  { setup: "What do you call a lazy kangaroo?", punchline: "A pouch potato!" },
+  { setup: "How does a penguin build its house?", punchline: "Igloos it together!" },
+  { setup: "What's a ghost's favorite dessert?", punchline: "I-scream!" },
+];
+
+let phase = 'idle';
+let phaseTime = 0;
+let gTime = 0;
+
+// ═══════════════════════════════════════
+// PART RENDERING ENGINE
+// ═══════════════════════════════════════
+function makeCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return { c, x: c.getContext('2d') };
+}
+
+function addGrain(cx, w, h, strength) {
+  const id = cx.getImageData(0, 0, w, h);
+  const d = id.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i+3] > 10) {
+      const n = (Math.random() - 0.5) * strength;
+      d[i] = Math.max(0, Math.min(255, d[i]+n));
+      d[i+1] = Math.max(0, Math.min(255, d[i+1]+n));
+      d[i+2] = Math.max(0, Math.min(255, d[i+2]+n));
+    }
+  }
+  cx.putImageData(id, 0, 0);
+}
+
+function pencilPath(cx, pts, width, color, passes) {
+  passes = passes || 2;
+  for (let p = 0; p < passes; p++) {
+    cx.strokeStyle = color || '#3a3226';
+    cx.lineCap = 'round';
+    cx.lineJoin = 'round';
+    cx.globalAlpha = p === 0 ? 0.75 : 0.3;
+    cx.lineWidth = p === 0 ? width : width * 0.55;
+    cx.beginPath();
+    for (let i = 0; i < pts.length; i++) {
+      const jitter = p === 0 ? 0.6 : 1.8;
+      const px = pts[i][0] + (Math.random()-0.5) * jitter;
+      const py = pts[i][1] + (Math.random()-0.5) * jitter;
+      if (i === 0) cx.moveTo(px, py); else cx.lineTo(px, py);
+    }
+    cx.stroke();
+  }
+  cx.globalAlpha = 1;
+}
+
+function ePts(cx, cy, rx, ry, n) {
+  const r = [];
+  for (let i = 0; i <= n; i++) {
+    const a = (i/n) * Math.PI * 2;
+    r.push([cx + Math.cos(a)*rx, cy + Math.sin(a)*ry]);
+  }
+  return r;
+}
+
+function fillEllipse(cx, x, y, rx, ry, color, n) {
+  n = n || 36;
+  cx.fillStyle = color;
+  cx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const a = (i/n)*Math.PI*2;
+    cx.lineTo(x+Math.cos(a)*rx, y+Math.sin(a)*ry);
+  }
+  cx.fill();
+}
+
+function crossHatch(cx, x, y, rx, ry, angle, gap, color) {
+  cx.save();
+  cx.globalAlpha = 0.1;
+  cx.strokeStyle = color || '#3a3226';
+  cx.lineWidth = 1.2;
+  cx.translate(x, y);
+  cx.rotate(angle);
+  for (let yy = -ry; yy < ry; yy += gap) {
+    const span = rx * Math.sqrt(Math.max(0, 1 - (yy*yy)/(ry*ry)));
+    if (span < 2) continue;
+    cx.beginPath();
+    cx.moveTo(-span + Math.random()*2, yy + Math.random());
+    cx.lineTo(span - Math.random()*2, yy + Math.random());
+    cx.stroke();
+  }
+  cx.restore();
+}
+
+// ═══════════════════════════════════════
+// PRE-RENDER PARTS
+// ═══════════════════════════════════════
+const P = {};
+
+function renderParts() {
+  // ── LILY PAD ──
+  {
+    const {c, x} = makeCanvas(420, 130);
+    pencilPath(x, ePts(210, 65, 190, 55, 48), 3, '#3a6348');
+    x.globalAlpha = 0.25; x.strokeStyle = '#3a6348'; x.lineWidth = 1.5;
+    for (let i = 0; i < 6; i++) {
+      const a = -0.9 + i*0.36;
+      x.beginPath(); x.moveTo(210, 65);
+      x.lineTo(210+Math.cos(a)*150, 65+Math.sin(a)*42); x.stroke();
+    }
+    x.globalAlpha = 1;
+    pencilPath(x, [[210,65],[275,18]], 2.5, '#3a6348');
+    pencilPath(x, [[210,65],[280,35]], 2.5, '#3a6348');
+    x.globalCompositeOperation = 'destination-over';
+    fillEllipse(x, 210, 65, 185, 52, 'rgba(90,150,70,0.15)');
+    x.globalCompositeOperation = 'source-over';
+    addGrain(x, 420, 130, 25);
+    P.pad = c;
+  }
+
+  // ── BODY ──
+  {
+    const {c, x} = makeCanvas(300, 280);
+    pencilPath(x, ePts(150, 140, 130, 120, 48), 3.5, '#3a3226');
+    // belly
+    pencilPath(x, ePts(150, 150, 80, 75, 36), 2, '#5a5040');
+    // spots
+    pencilPath(x, ePts(90, 110, 11, 9, 16), 1.8, '#4a6040');
+    pencilPath(x, ePts(200, 100, 9, 8, 16), 1.8, '#4a6040');
+    pencilPath(x, ePts(165, 185, 7, 6, 16), 1.8, '#4a6040');
+    crossHatch(x, 55, 130, 45, 65, -0.3, 6, '#3a5030');
+    crossHatch(x, 245, 130, 45, 65, 0.3, 6, '#3a5030');
+    x.globalCompositeOperation = 'destination-over';
+    fillEllipse(x, 150, 140, 127, 117, 'rgba(110,165,75,0.14)');
+    fillEllipse(x, 150, 150, 78, 73, 'rgba(170,210,130,0.1)');
+    x.globalCompositeOperation = 'source-over';
+    addGrain(x, 300, 280, 28);
+    P.body = c;
+  }
+
+  // ── HEAD (no mouth drawn — mouth is separate) ──
+  {
+    const {c, x} = makeCanvas(340, 200);
+    pencilPath(x, ePts(170, 105, 150, 85, 48), 3.5, '#3a3226');
+    // nostrils
+    pencilPath(x, ePts(148, 82, 5, 4, 12), 1.8, '#3a3226');
+    pencilPath(x, ePts(192, 82, 5, 4, 12), 1.8, '#3a3226');
+    x.globalCompositeOperation = 'destination-over';
+    fillEllipse(x, 170, 105, 147, 82, 'rgba(105,160,72,0.14)');
+    x.globalCompositeOperation = 'source-over';
+    addGrain(x, 340, 200, 22);
+    P.head = c;
+  }
+
+  // ── EYE BUMP ──
+  {
+    const {c, x} = makeCanvas(100, 100);
+    pencilPath(x, ePts(50, 50, 44, 42, 36), 3, '#3a3226');
+    x.globalCompositeOperation = 'destination-over';
+    fillEllipse(x, 50, 50, 42, 40, 'rgba(120,175,90,0.14)');
+    x.globalCompositeOperation = 'source-over';
+    addGrain(x, 100, 100, 20);
+    P.eyeBump = c;
+  }
+
+  // ── EYEBALL OPEN ──
+  {
+    const {c, x} = makeCanvas(72, 72);
+    pencilPath(x, ePts(36, 36, 32, 30, 30), 2.5, '#3a3226');
+    x.globalCompositeOperation = 'destination-over';
+    fillEllipse(x, 36, 36, 30, 28, 'rgba(255,252,238,0.88)');
+    x.globalCompositeOperation = 'source-over';
+    addGrain(x, 72, 72, 15);
+    P.eyeOpen = c;
+  }
+
+  // ── HAPPY EYE (crescent for laughing — ^  ^ shape) ──
+  {
+    const {c, x} = makeCanvas(72, 50);
+    // A happy upward crescent — the key to a natural laugh face
+    const pts = [];
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24;
+      const px = 6 + t * 60;
+      const py = 40 - Math.sin(t * Math.PI) * 32;
+      pts.push([px, py]);
+    }
+    pencilPath(x, pts, 3.5, '#3a3226');
+    // second line underneath for thickness
+    const pts2 = [];
+    for (let i = 0; i <= 24; i++) {
+      const t = i / 24;
+      const px = 8 + t * 56;
+      const py = 42 - Math.sin(t * Math.PI) * 26;
+      pts2.push([px, py]);
+    }
+    pencilPath(x, pts2, 2, '#3a3226', 1);
+    addGrain(x, 72, 50, 18);
+    P.eyeHappy = c;
+  }
+
+  // ── PUPIL ──
+  {
+    const {c, x} = makeCanvas(32, 32);
+    x.fillStyle = '#2a2218';
+    x.beginPath();
+    for (let i = 0; i <= 24; i++) {
+      const a = (i/24)*Math.PI*2;
+      x.lineTo(16+Math.cos(a)*13, 16+Math.sin(a)*13);
+    }
+    x.fill();
+    x.fillStyle = 'rgba(255,255,245,0.7)';
+    x.beginPath(); x.arc(11, 11, 4.5, 0, Math.PI*2); x.fill();
+    addGrain(x, 32, 32, 20);
+    P.pupil = c;
+  }
+
+  // ── EYELID ──
+  {
+    const {c, x} = makeCanvas(72, 45);
+    x.fillStyle = 'rgba(105,160,72,0.88)';
+    x.beginPath(); x.moveTo(2, 42);
+    for (let i = 0; i <= 24; i++) {
+      const t = i/24;
+      x.lineTo(2+t*68, 42-Math.sin(t*Math.PI)*38);
+    }
+    x.lineTo(70, 42); x.closePath(); x.fill();
+    const lidPts = [];
+    for (let i = 0; i <= 24; i++) {
+      const t = i/24;
+      lidPts.push([2+t*68, 42-Math.sin(t*Math.PI)*38]);
+    }
+    pencilPath(x, lidPts, 2.5, '#3a3226');
+    addGrain(x, 72, 45, 18);
+    P.eyelid = c;
+  }
+
+  // ── MOUTH CLOSED (gentle smile) ──
+  {
+    const {c, x} = makeCanvas(210, 40);
+    const pts = [];
+    for (let i = 0; i <= 24; i++) {
+      const a = 0.1 + (Math.PI - 0.2) * (i/24);
+      pts.push([105+Math.cos(a)*90, 8+Math.sin(a)*25]);
+    }
+    pencilPath(x, pts, 3, '#3a3226');
+    addGrain(x, 210, 40, 20);
+    P.mouthClosed = c;
+  }
+
+  // ── MOUTH WIDE OPEN (the frog's signature laugh!) ──
+  {
+    const {c, x} = makeCanvas(320, 160);
+    // huge wide elliptical mouth
+    pencilPath(x, ePts(160, 75, 145, 68, 40), 4, '#3a3226');
+    // dark inside
+    x.globalCompositeOperation = 'destination-over';
+    fillEllipse(x, 160, 75, 140, 65, 'rgba(50,25,15,0.35)');
+    x.globalCompositeOperation = 'source-over';
+    // tongue
+    fillEllipse(x, 165, 95, 35, 22, 'rgba(210,115,105,0.45)');
+    pencilPath(x, ePts(165, 95, 35, 22, 20), 1.8, '#9a5a50');
+    // upper teeth ridge hint
+    x.globalAlpha = 0.15;
+    const teethPts = [];
+    for (let i = 0; i <= 16; i++) {
+      const a = Math.PI + (Math.PI) * (i/16);
+      teethPts.push([160+Math.cos(a)*120, 40+Math.sin(a)*15]);
+    }
+    pencilPath(x, teethPts, 1.5, '#3a3226', 1);
+    x.globalAlpha = 1;
+    addGrain(x, 320, 160, 25);
+    P.mouthWide = c;
+  }
+
+  // ── MOUTH MEDIUM ('O' for wondering) ──
+  {
+    const {c, x} = makeCanvas(110, 90);
+    pencilPath(x, ePts(55, 45, 40, 35, 28), 3, '#3a3226');
+    x.globalCompositeOperation = 'destination-over';
+    fillEllipse(x, 55, 45, 38, 33, 'rgba(50,25,15,0.2)');
+    x.globalCompositeOperation = 'source-over';
+    addGrain(x, 110, 90, 20);
+    P.mouthMed = c;
+  }
+
+  // ── LEGS ──
+  {
+    const {c, x} = makeCanvas(170, 150);
+    x.strokeStyle = '#3a3226'; x.lineWidth = 3; x.lineCap = 'round';
+    // thigh
+    x.globalAlpha = 0.75;
+    x.beginPath(); x.moveTo(22, 12);
+    x.bezierCurveTo(85, -8, 148, 42, 125, 95); x.stroke();
+    x.globalAlpha = 0.3; x.lineWidth = 2;
+    x.beginPath(); x.moveTo(24, 14);
+    x.bezierCurveTo(87, -6, 150, 44, 127, 97); x.stroke();
+    x.globalAlpha = 1;
+    // foot
+    pencilPath(x, ePts(125, 118, 38, 16, 24), 2.5, '#3a3226');
+    // webbing
+    x.strokeStyle = '#3a3226'; x.lineWidth = 1.5; x.globalAlpha = 0.6;
+    for (let j = -1; j <= 1; j++) {
+      x.beginPath(); x.moveTo(125, 105); x.lineTo(125+j*22, 98); x.stroke();
+    }
+    x.globalAlpha = 1;
+    x.globalCompositeOperation = 'destination-over';
+    fillEllipse(x, 125, 118, 35, 14, 'rgba(100,155,75,0.12)');
+    x.globalCompositeOperation = 'source-over';
+    addGrain(x, 170, 150, 22);
+    P.legR = c;
+
+    const {c: c2, x: x2} = makeCanvas(170, 150);
+    x2.translate(170, 0); x2.scale(-1, 1);
+    x2.drawImage(c, 0, 0);
+    P.legL = c2;
+  }
+
+  // ── TEAR ──
+  {
+    const {c, x} = makeCanvas(18, 28);
+    x.fillStyle = 'rgba(100,170,220,0.6)';
+    x.beginPath();
+    x.moveTo(9, 2);
+    x.bezierCurveTo(3, 10, 3, 20, 9, 26);
+    x.bezierCurveTo(15, 20, 15, 10, 9, 2);
+    x.fill();
+    pencilPath(x, [[9,2],[5,11],[4,18],[7,23],[9,26],[11,23],[13,18],[12,11],[9,2]], 1, 'rgba(70,130,200,0.5)', 1);
+    P.tear = c;
+  }
+
+  // ── QUESTION MARK ──
+  {
+    const {c, x} = makeCanvas(45, 60);
+    x.font = 'bold 52px Caveat';
+    x.fillStyle = '#3a3226';
+    x.globalAlpha = 0.55;
+    x.fillText('?', 5, 48);
+    x.globalAlpha = 1;
+    addGrain(x, 45, 60, 28);
+    P.qmark = c;
+  }
+
+  // ── LAUGH LINES (^v^ cheek crinkles) ──
+  {
+    const {c, x} = makeCanvas(30, 30);
+    x.strokeStyle = '#3a3226'; x.lineWidth = 2; x.lineCap = 'round';
+    x.globalAlpha = 0.4;
+    for (let i = 0; i < 3; i++) {
+      x.beginPath(); x.moveTo(2, 6+i*9); x.lineTo(28, 6+i*9); x.stroke();
+    }
+    x.globalAlpha = 1;
+    P.laughLines = c;
+  }
+}
+
+renderParts();
+
+// ═══════════════════════════════════════
+// SMOOTH ANIMATION
+// ═══════════════════════════════════════
+function lerp(a,b,t){return a+(b-a)*t;}
+function smoothIn(t, dur) { return Math.min(1, t/dur); }
+
+function headX(t) {
+  if (phase==='listening') return Math.sin(t*1.8)*10;
+  if (phase==='wondering') return Math.sin(t*0.9)*5;
+  if (phase==='laughing') return Math.sin(t*7)*14 + Math.sin(t*4.7)*7;
+  return Math.sin(t*0.7)*2;
+}
+
+function headY(t) {
+  if (phase==='listening') return Math.sin(t*2.2)*5;
+  if (phase==='laughing') {
+    // head rocks BACK when laughing (tilts up)
+    return -15 + Math.sin(t*9)*10 + Math.abs(Math.sin(t*6))*6;
+  }
+  return Math.sin(t*0.9)*1.5;
+}
+
+function headRot(t) {
+  if (phase==='wondering') return Math.sin(t*0.8)*0.1;
+  if (phase==='laughing') return Math.sin(t*6)*0.12 + Math.sin(t*3.7)*0.05;
+  return Math.sin(t*0.5)*0.02;
+}
+
+function bodyScaleX(t) {
+  if (phase==='laughing') return 1 + Math.sin(t*8)*0.05;
+  return 1 + Math.sin(t*1.5)*0.008;
+}
+function bodyScaleY(t) {
+  if (phase==='laughing') return 1 - Math.sin(t*8)*0.05;
+  return 1 - Math.sin(t*1.5)*0.008;
+}
+
+function blinkAmt(t) {
+  if (phase==='laughing') return -1; // special: use happy eyes instead
+  const c = t % 4;
+  if (c < 0.08) return c / 0.08;
+  if (c < 0.16) return 1 - (c-0.08)/0.08;
+  return 0;
+}
+
+function eyeScale(t) {
+  if (phase==='wondering') return 1.3;
+  if (phase==='laughing') return 0.9;
+  return 1;
+}
+
+function pupilOx(t) {
+  if (phase==='listening') return Math.sin(t*1.5)*6;
+  if (phase==='wondering') return Math.sin(t*0.8)*4;
+  return Math.sin(t*0.6)*2;
+}
+
+function mouthPhase(t) {
+  if (phase==='idle') return 0;
+  if (phase==='listening') return 0.2;
+  if (phase==='wondering') return 1;
+  if (phase==='laughing') return 2;
+  return 0;
+}
+
+function tearProg() {
+  if (phase!=='laughing'||phaseTime<1.2) return -1;
+  return (phaseTime-1.2)%1.8;
+}
+
+function legKick(t) {
+  if (phase==='laughing') return Math.sin(t*6)*8;
+  return 0;
+}
+
+// Mouth swing during laugh — the key animation
+function mouthSwing(t) {
+  if (phase!=='laughing') return 0;
+  return Math.sin(t*7)*0.08 + Math.sin(t*4.3)*0.04;
+}
+
+function mouthWobbleScale(t) {
+  if (phase!=='laughing') return 1;
+  return 1 + Math.sin(t*9)*0.06;
+}
+
+// Body rocks backward during laugh
+function bodyTiltBack(t) {
+  if (phase!=='laughing') return 0;
+  const ramp = Math.min(1, phaseTime / 0.5);
+  return -0.06 * ramp + Math.sin(t*5)*0.02;
+}
+
+// ═══════════════════════════════════════
+// MAIN DRAW
+// ═══════════════════════════════════════
+function draw(t) {
+  ctx.clearRect(0, 0, W, H);
+  const cx = W/2, cy = H/2 + 60;
+
+  const hx = headX(t);
+  const hy = headY(t);
+  const hr = headRot(t);
+  const bsx = bodyScaleX(t);
+  const bsy = bodyScaleY(t);
+  const bl = blinkAmt(t);
+  const es = eyeScale(t);
+  const px = pupilOx(t);
+  const mp = mouthPhase(t);
+  const td = tearProg();
+  const lk = legKick(t);
+  const ms = mouthSwing(t);
+  const mws = mouthWobbleScale(t);
+  const bt = bodyTiltBack(t);
+
+  // ── Lily Pad ──
+  ctx.drawImage(P.pad, cx-210, cy+165);
+
+  // ── Body with tilt ──
+  ctx.save();
+  ctx.translate(cx, cy+90);
+  ctx.rotate(bt);
+  ctx.translate(-cx, -(cy+90));
+
+  // Legs
+  ctx.save();
+  ctx.translate(cx-155, cy+80+lk);
+  ctx.rotate(phase==='laughing' ? Math.sin(t*5)*0.08 : 0);
+  ctx.drawImage(P.legL, 0, 0);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(cx+15, cy+80-lk);
+  ctx.rotate(phase==='laughing' ? -Math.sin(t*5)*0.08 : 0);
+  ctx.drawImage(P.legR, 0, 0);
+  ctx.restore();
+
+  // Body
+  ctx.save();
+  ctx.translate(cx, cy+50);
+  ctx.scale(bsx, bsy);
+  ctx.drawImage(P.body, -150, -140);
+  ctx.restore();
+
+  // ── Head group ──
+  ctx.save();
+  const headCX = cx + hx;
+  const headCY = cy - 80 + hy;
+  ctx.translate(headCX, headCY);
+  ctx.rotate(hr);
+
+  // Head base
+  ctx.drawImage(P.head, -170, -105);
+
+  // ── Eyes ──
+  const eyeSp = 80;
+
+  if (phase === 'laughing') {
+    // HAPPY CRESCENT EYES  ^  ^
+    for (let side = -1; side <= 1; side += 2) {
+      const ex = side * eyeSp;
+      const ey = -65;
+
+      // eye bump still visible
+      ctx.save();
+      ctx.translate(ex, ey);
+      ctx.scale(es, es);
+      ctx.drawImage(P.eyeBump, -50, -50);
+
+      // happy crescent instead of open eye
+      ctx.save();
+      ctx.rotate(side * 0.15); // slight tilt outward for happiness
+      ctx.drawImage(P.eyeHappy, -36, -20);
+      ctx.restore();
+
+      ctx.restore();
+    }
+
+    // Laugh lines / cheek crinkles
+    ctx.globalAlpha = 0.5;
+    ctx.drawImage(P.laughLines, -145, 5);
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.drawImage(P.laughLines, -145, 5);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+
+  } else {
+    // Normal eyes
+    for (let side = -1; side <= 1; side += 2) {
+      const ex = side * eyeSp;
+      const ey = -65;
+
+      ctx.save();
+      ctx.translate(ex, ey);
+      ctx.scale(es, es);
+      ctx.drawImage(P.eyeBump, -50, -50);
+      ctx.drawImage(P.eyeOpen, -36, -32);
+      ctx.drawImage(P.pupil, -16 + px*0.4, -14);
+
+      // blink eyelid
+      if (bl > 0.05) {
+        ctx.save();
+        const lidY = -32 + (1-bl)*(-28);
+        ctx.translate(-36, lidY);
+        ctx.scale(1, bl);
+        ctx.drawImage(P.eyelid, 0, 0);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+  }
+
+  // ── Mouth ──
+  if (mp < 0.5) {
+    // closed smile
+    ctx.drawImage(P.mouthClosed, -105, 15);
+  } else if (mp < 1.5) {
+    // wondering 'O'
+    ctx.drawImage(P.mouthMed, -55, 10);
+  } else {
+    // WIDE OPEN LAUGH — the star of the show
+    ctx.save();
+    ctx.rotate(ms); // swing!
+    ctx.scale(mws, mws); // wobble!
+    ctx.drawImage(P.mouthWide, -160, -5);
+    ctx.restore();
+  }
+
+  ctx.restore(); // end head group
+
+  ctx.restore(); // end body tilt group
+
+  // ── Tears (drawn after transforms so they fall correctly) ──
+  if (td >= 0 && td < 1.5) {
+    const ty = td * 55;
+    const alpha = td < 1 ? 1 : 1-(td-1)/0.5;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(P.tear, headCX - eyeSp - 6, headCY - 25 + ty);
+    ctx.drawImage(P.tear, headCX + eyeSp - 4, headCY - 20 + ty*1.1);
+    ctx.restore();
+  }
+
+  // ── Question marks ──
+  if (phase === 'wondering') {
+    ctx.save();
+    ctx.globalAlpha = 0.45 + Math.sin(t*2)*0.2;
+    ctx.drawImage(P.qmark, headCX+125, headCY-115+Math.sin(t*1.5)*10);
+    ctx.globalAlpha = 0.35 + Math.sin(t*2.5)*0.2;
+    ctx.drawImage(P.qmark, headCX+105, headCY-150+Math.sin(t*1.8+1)*8);
+    ctx.restore();
+  }
+
+  // ── Burst lines when laughing ──
+  if (phase === 'laughing' && phaseTime > 0.4) {
+    ctx.save();
+    ctx.strokeStyle = '#3a3226';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.25 + Math.sin(t*3)*0.08;
+    for (let i = 0; i < 12; i++) {
+      const ang = (i/12)*Math.PI*2 + Math.sin(t*2.5)*0.15;
+      const r1 = 230 + Math.sin(t*4+i*1.7)*18;
+      const r2 = r1 + 22;
+      ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(ang)*r1, cy-20+Math.sin(ang)*r1*0.55);
+      ctx.lineTo(cx+Math.cos(ang)*r2, cy-20+Math.sin(ang)*r2*0.55);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ── "HA HA" text particles when laughing ──
+  if (phase === 'laughing' && phaseTime > 0.6) {
+    ctx.save();
+    ctx.font = 'bold 28px Caveat';
+    ctx.fillStyle = '#3a3226';
+    const haCount = Math.min(4, Math.floor((phaseTime-0.6)/0.5));
+    for (let i = 0; i < haCount; i++) {
+      const angle = -0.8 + i * 0.5;
+      const dist = 250 + ((phaseTime - 0.6 - i*0.5) % 2) * 40;
+      const fadeT = ((phaseTime - 0.6 - i*0.5) % 2);
+      ctx.globalAlpha = fadeT < 1.5 ? 0.35 : 0.35 * (1-(fadeT-1.5)/0.5);
+      const tx = cx + Math.cos(angle) * dist;
+      const ty = cy - 80 + Math.sin(angle) * dist * 0.4 - fadeT * 20;
+      ctx.save();
+      ctx.translate(tx, ty);
+      ctx.rotate(angle * 0.3);
+      ctx.fillText('ha!', 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+}
+
+// ═══════════════════════════════════════
+// LOOP
+// ═══════════════════════════════════════
+let lastTS = 0;
+function loop(ts) {
+  const dt = Math.min((ts-lastTS)/1000, 0.05);
+  lastTS = ts;
+  gTime += dt;
+  phaseTime += dt;
+  draw(gTime);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ═══════════════════════════════════════
+// JOKE CONTROLS
+// ═══════════════════════════════════════
+const bubble = document.getElementById('bubble');
+const phaseTag = document.getElementById('phaseTag');
+const jokeBtn = document.getElementById('jokeBtn');
+const skipBtn = document.getElementById('skipBtn');
+let jokeIdx = Math.floor(Math.random()*jokes.length);
+let jokeTO = null;
+
+function setPhase(p) {
+  phase = p; phaseTime = 0;
+  const m = {idle:'idle',listening:'listening...',wondering:'hmm...',laughing:'HAHAHA!!'};
+  phaseTag.textContent = m[p];
+}
+
+function showJoke() {
+  if(jokeTO) clearTimeout(jokeTO);
+  const j = jokes[jokeIdx%jokes.length]; jokeIdx++;
+  setPhase('listening');
+  bubble.innerHTML = '<span class="setup">'+j.setup+'</span>';
+  bubble.classList.add('visible');
+  jokeBtn.disabled = true;
+
+  jokeTO = setTimeout(()=>{
+    setPhase('wondering');
+    bubble.innerHTML = '<span class="setup">'+j.setup+'</span><span class="thinking">hmm, let me think...</span>';
+    jokeTO = setTimeout(()=>{
+      setPhase('laughing');
+      bubble.innerHTML = '<span class="setup">'+j.setup+'</span><span class="punchline">'+j.punchline+'</span>';
+      jokeTO = setTimeout(()=>{ setPhase('idle'); bubble.classList.remove('visible'); jokeBtn.disabled=false; },6000);
+    },2200);
+  },2500);
+}
+
+jokeBtn.addEventListener('click', showJoke);
+skipBtn.addEventListener('click', ()=>{
+  if(jokeTO) clearTimeout(jokeTO);
+  const j = jokes[jokeIdx%jokes.length]; jokeIdx++;
+  setPhase('laughing');
+  bubble.innerHTML = '<span class="setup">'+j.setup+'</span><span class="punchline">'+j.punchline+'</span>';
+  bubble.classList.add('visible');
+  jokeBtn.disabled = true;
+  setTimeout(()=>{ setPhase('idle'); bubble.classList.remove('visible'); jokeBtn.disabled=false; },6000);
+});
+</script>
+</body>
+</html>

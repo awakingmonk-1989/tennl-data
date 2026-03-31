@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teddy Bear Joke Caricature</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f5f0e8;
+      font-family: 'Georgia', serif;
+      padding: 20px;
+      transition: background 0.3s;
+    }
+
+    body.dark {
+      background: #1a1510;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 400;
+      color: #5a3e28;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    body.dark h1 { color: #c8a878; }
+
+    .subtitle {
+      font-size: 13px;
+      color: #9a7a5a;
+      margin-bottom: 18px;
+      text-align: center;
+      font-style: italic;
+    }
+
+    body.dark .subtitle { color: #7a6a5a; }
+
+    canvas {
+      display: block;
+      border-radius: 16px;
+      background: transparent;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      padding: 9px 24px;
+      font-size: 14px;
+      font-family: 'Georgia', serif;
+      border-radius: 30px;
+      border: 1.5px solid #b8956a;
+      background: #fff8f0;
+      color: #5a3e28;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+
+    button:hover { background: #ffeedd; }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    body.dark button {
+      background: #2a1e10;
+      border-color: #6a4a2a;
+      color: #c8a878;
+    }
+
+    body.dark button:hover { background: #3a2a18; }
+
+    #jokeBox {
+      text-align: center;
+      margin-top: 16px;
+      min-height: 52px;
+      max-width: 420px;
+      width: 100%;
+      padding: 0 10px;
+    }
+
+    #jokeSetup {
+      font-size: 14px;
+      color: #7a5a3a;
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    body.dark #jokeSetup { color: #9a7a5a; }
+
+    #jokePunchline {
+      font-size: 15px;
+      font-weight: bold;
+      color: #c06020;
+      margin-top: 6px;
+      line-height: 1.5;
+      min-height: 22px;
+    }
+
+    body.dark #jokePunchline { color: #e8a060; }
+
+    .toggle-dark {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      font-size: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      line-height: 1;
+    }
+
+    .toggle-dark:hover { background: rgba(0,0,0,0.06); }
+  </style>
+</head>
+<body>
+
+  <button class="toggle-dark" id="darkToggle" title="Toggle dark mode">🌙</button>
+
+  <h1>🐻 Teddy's Joke Time</h1>
+  <p class="subtitle">A sketch-animated caricature</p>
+
+  <canvas id="c" width="420" height="480"></canvas>
+
+  <div class="controls">
+    <button id="btnJoke" onclick="startJoke()">Tell a joke 🎤</button>
+    <button id="btnReset" onclick="resetBear()">Reset 😐</button>
+  </div>
+
+  <div id="jokeBox">
+    <div id="jokeSetup"></div>
+    <div id="jokePunchline"></div>
+  </div>
+
+  <script>
+    // ─── Dark mode toggle ───────────────────────────────────────────────────────
+    const darkToggle = document.getElementById('darkToggle');
+    let darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    function applyDark() {
+      document.body.classList.toggle('dark', darkMode);
+      darkToggle.textContent = darkMode ? '☀️' : '🌙';
+    }
+    applyDark();
+    darkToggle.addEventListener('click', () => { darkMode = !darkMode; applyDark(); });
+
+    // ─── Canvas setup ───────────────────────────────────────────────────────────
+    const canvas = document.getElementById('c');
+    const ctx    = canvas.getContext('2d');
+    const W = 420, H = 480;
+
+    // ─── Color helpers ──────────────────────────────────────────────────────────
+    const C = {
+      line:    () => darkMode ? '#ccbbaa' : '#3a2a18',
+      bg:      () => darkMode ? 'transparent' : 'transparent',
+      skin:    () => darkMode ? '#5a3a1e' : '#e8c890',
+      darkSkin:() => darkMode ? '#3a2010' : '#c89860',
+      white:   () => darkMode ? '#e0d8cc' : '#ffffff',
+      red:     () => darkMode ? '#882222' : '#cc4444',
+      blue:    () => darkMode ? '#6688cc' : '#4477bb',
+      burst:   () => darkMode ? '#ffcc66' : '#cc5500',
+    };
+
+    // ─── State ──────────────────────────────────────────────────────────────────
+    let t          = 0;
+    let state      = 'idle';   // 'idle' | 'suspense' | 'laugh'
+    let laughT     = 0;
+    let blinkTimer = 0;
+    let blinkOpen  = 1;
+    let headBobX   = 0;
+    let headTiltAngle = 0;
+    let stomachBounce = 0;
+    let bodyShake  = 0;
+    let mouthOpen  = 0;
+    let jokeTimer  = 0;
+    let currentJoke = -1;
+
+    // ─── Jokes ──────────────────────────────────────────────────────────────────
+    const jokes = [
+      ["Why don't scientists trust atoms?",          "Because they make up everything! 😂"],
+      ["What do you call a bear with no teeth?",     "A gummy bear! 🐻😂"],
+      ["Why did the teddy bear skip dessert?",       "She was already stuffed! 🧸😂"],
+      ["Why can't a bicycle stand on its own?",      "Because it's two-tired! 🚲😂"],
+      ["What do you call fake spaghetti?",           "An impasta! 🍝😂"],
+    ];
+
+    // ─── Sketch drawing helpers ─────────────────────────────────────────────────
+    function wobble(v, w) { return v + (Math.random() - 0.5) * w; }
+
+    function sketchCircle(cx, cy, r, fill, wob = 1.5) {
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.08) {
+        const rr = r + (Math.random() - 0.5) * wob;
+        const x  = cx + Math.cos(a) * rr + (Math.random() - 0.5) * wob;
+        const y  = cy + Math.sin(a) * rr + (Math.random() - 0.5) * wob;
+        a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      ctx.stroke();
+    }
+
+    function sketchEllipse(cx, cy, rx, ry, fill, wob = 1.5) {
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.07) {
+        const rrx = rx + (Math.random() - 0.5) * wob;
+        const rry = ry + (Math.random() - 0.5) * wob;
+        const x   = cx + Math.cos(a) * rrx + (Math.random() - 0.5) * wob;
+        const y   = cy + Math.sin(a) * rry + (Math.random() - 0.5) * wob;
+        a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      ctx.stroke();
+    }
+
+    // ─── Main draw ──────────────────────────────────────────────────────────────
+    function drawBear() {
+      ctx.clearRect(0, 0, W, H);
+
+      ctx.strokeStyle = C.line();
+      ctx.lineWidth   = 1.8;
+      ctx.lineCap     = 'round';
+      ctx.lineJoin    = 'round';
+
+      const cx = W / 2 + bodyShake;
+      const cy = H / 2 + 40;
+
+      // ── Body ────────────────────────────────────────────────────────────────
+      ctx.save();
+      ctx.translate(cx, cy + stomachBounce * 0.3);
+      sketchEllipse(0, 0, 70, 85, C.skin(), 2);
+      sketchEllipse(0, 22, 42, 50, C.darkSkin(), 1.5);  // tummy patch
+
+      // Stomach laugh lines
+      if (state === 'laugh' && mouthOpen > 0.5) {
+        ctx.strokeStyle = C.line();
+        ctx.globalAlpha = mouthOpen * 0.35;
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 4; i++) {
+          const yy = -10 + i * 14;
+          ctx.beginPath();
+          ctx.moveTo(wobble(-30, 4), wobble(yy, 3));
+          ctx.quadraticCurveTo(wobble(0, 6), wobble(yy + 6, 4), wobble(30, 4), wobble(yy, 3));
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = C.line();
+      }
+      ctx.restore();
+
+      // ── Arms ────────────────────────────────────────────────────────────────
+      const armSwing = state === 'laugh' ? Math.sin(laughT * 0.3) * 15 : 0;
+      ctx.save();
+      ctx.translate(cx, cy);
+      // Left arm
+      ctx.save();
+      ctx.translate(-70, -20);
+      ctx.rotate(-0.4 + armSwing * 0.04);
+      sketchEllipse(0, 0, 18, 42, C.skin(), 1.5);
+      sketchCircle(0, 40, 16, C.skin(), 1.5);
+      ctx.restore();
+      // Right arm
+      ctx.save();
+      ctx.translate(70, -20);
+      ctx.rotate(0.4 - armSwing * 0.04);
+      sketchEllipse(0, 0, 18, 42, C.skin(), 1.5);
+      sketchCircle(0, 40, 16, C.skin(), 1.5);
+      ctx.restore();
+      ctx.restore();
+
+      // ── Legs ────────────────────────────────────────────────────────────────
+      ctx.save();
+      ctx.translate(cx, cy + 80);
+      for (const side of [-1, 1]) {
+        ctx.save();
+        ctx.translate(side * 38, 0);
+        sketchEllipse(0, 0, 22, 36, C.skin(), 1.5);
+        sketchEllipse(0, 34, 24, 16, C.darkSkin(), 1.5);  // paw
+        ctx.restore();
+      }
+      ctx.restore();
+
+      // ── Head ────────────────────────────────────────────────────────────────
+      const headX = cx + headBobX;
+      const headY = cy - 118 + (state === 'laugh' ? Math.sin(laughT * 0.25) * 8 : 0);
+
+      ctx.save();
+      ctx.translate(headX, headY);
+      ctx.rotate(headTiltAngle);
+
+      // Head base
+      sketchCircle(0, 0, 62, C.skin(), 2);
+
+      // Ears
+      for (const side of [-1, 1]) {
+        ctx.save();
+        ctx.translate(side * 50, -42);
+        sketchCircle(0, 0, 22, C.skin(), 2);
+        sketchCircle(0, 0, 12, C.darkSkin(), 1.5);
+        ctx.restore();
+      }
+
+      // Snout
+      sketchEllipse(0, 22, 26, 18, C.darkSkin(), 1.5);
+      // Nose
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.1) {
+        const rr = (a < Math.PI ? 10 : 8) + (Math.random() - 0.5) * 0.8;
+        const x = Math.cos(a) * rr + (Math.random() - 0.5) * 0.8;
+        const y = Math.sin(a) * (a < Math.PI ? 6 : 5) + 14 + (Math.random() - 0.5) * 0.8;
+        a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.fillStyle = C.line(); ctx.fill(); ctx.stroke();
+
+      // ── Eyes ──────────────────────────────────────────────────────────────
+      const eyeY       = -10;
+      const pupilScale = state === 'suspense' ? 1.55 : (state === 'laugh' ? 0.5 : 1);
+      const baseEyeR   = 13 * pupilScale;
+
+      for (const side of [-1, 1]) {
+        const ex = side * 24;
+
+        // Eyeball
+        sketchCircle(ex, eyeY, baseEyeR, C.white(), 1);
+
+        if (blinkOpen > 0.1) {
+          // Pupil
+          const pupilR = baseEyeR * 0.55 * blinkOpen;
+          const pupilOffY = state === 'suspense' ? 2 : 0;
+          sketchCircle(ex, eyeY + pupilOffY, pupilR, darkMode ? '#666' : '#333', 0.5);
+
+          // Shine
+          ctx.beginPath();
+          ctx.arc(ex + pupilR * 0.3, eyeY + pupilOffY - pupilR * 0.3, pupilR * 0.28, 0, Math.PI * 2);
+          ctx.fillStyle = C.white(); ctx.fill();
+
+          // Eyebrow
+          const browLift = state === 'suspense' ? -9 : (state === 'laugh' ? 5 : -2);
+          ctx.beginPath();
+          ctx.lineWidth = 2.5;
+          ctx.moveTo(ex - baseEyeR * 0.9, eyeY - baseEyeR - 3 + browLift + wobble(0, 1));
+          ctx.quadraticCurveTo(
+            ex + wobble(0, 1),
+            eyeY - baseEyeR - 9 + browLift + wobble(0, 1),
+            ex + baseEyeR * 0.9,
+            eyeY - baseEyeR - 3 + browLift + wobble(0, 1)
+          );
+          ctx.stroke();
+          ctx.lineWidth = 1.8;
+
+        } else {
+          // Blink squint
+          ctx.beginPath();
+          ctx.lineWidth = 3;
+          ctx.moveTo(ex - baseEyeR, eyeY);
+          ctx.quadraticCurveTo(ex, eyeY + baseEyeR * 0.5, ex + baseEyeR, eyeY);
+          ctx.stroke();
+          ctx.lineWidth = 1.8;
+        }
+      }
+
+      // ── Mouth ─────────────────────────────────────────────────────────────
+      if (state === 'laugh') {
+        const mo = mouthOpen;
+
+        // Outer lip curve
+        ctx.beginPath();
+        ctx.moveTo(-22, 30);
+        ctx.quadraticCurveTo(0, 30 + 20 * mo, 22, 30);
+        ctx.stroke();
+
+        // Open mouth interior
+        if (mo > 0.4) {
+          ctx.beginPath();
+          ctx.moveTo(-18, 31);
+          ctx.quadraticCurveTo(0, 31 + 18 * mo, 18, 31);
+          ctx.lineTo(12, 31 + 12 * mo);
+          ctx.quadraticCurveTo(0, 31 + 26 * mo, -12, 31 + 12 * mo);
+          ctx.closePath();
+          ctx.fillStyle = C.red(); ctx.fill();
+          ctx.strokeStyle = C.line(); ctx.stroke();
+        }
+
+        // Teeth
+        if (mo > 0.65) {
+          ctx.fillStyle = C.white();
+          for (const [tx, tw] of [[-13, 11], [2, 11]]) {
+            ctx.fillRect(tx, 32, tw, 7 * mo);
+            ctx.strokeStyle = C.line(); ctx.lineWidth = 0.8;
+            ctx.strokeRect(tx, 32, tw, 7 * mo);
+            ctx.lineWidth = 1.8;
+          }
+        }
+
+        // Laugh tears
+        if (mo > 0.78) {
+          ctx.strokeStyle = C.blue();
+          ctx.lineWidth = 1.4;
+          for (const side of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(side * 27, eyeY + 9);
+            ctx.quadraticCurveTo(side * 36, eyeY + 20, side * 29, eyeY + 30);
+            ctx.stroke();
+            // teardrop
+            ctx.beginPath();
+            ctx.arc(side * 29 + wobble(0, 2), eyeY + 30 + wobble(0, 2), 3, 0, Math.PI * 2);
+            ctx.fillStyle = C.blue(); ctx.fill();
+          }
+          ctx.strokeStyle = C.line(); ctx.lineWidth = 1.8;
+        }
+
+        // Blush cheeks
+        ctx.save();
+        ctx.globalAlpha = mouthOpen * 0.32;
+        sketchEllipse(-42, 12, 14, 8, darkMode ? '#ff8855' : '#ff9977', 1);
+        sketchEllipse( 42, 12, 14, 8, darkMode ? '#ff8855' : '#ff9977', 1);
+        ctx.restore();
+
+      } else if (state === 'suspense') {
+        // Little "o" wondering mouth
+        const oWob = Math.sin(t * 0.05) * 2;
+        sketchEllipse(0, 32 + oWob, 8, 7, darkMode ? '#887755' : '#aa8855', 1);
+
+      } else {
+        // Neutral smile
+        ctx.beginPath();
+        ctx.moveTo(wobble(-18, 1), wobble(33, 1));
+        ctx.quadraticCurveTo(wobble(0, 1), wobble(42, 1), wobble(18, 1), wobble(33, 1));
+        ctx.stroke();
+      }
+
+      // ── Suspense floaters ────────────────────────────────────────────────
+      if (state === 'suspense') {
+        ctx.save();
+        ctx.font = 'bold 18px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = C.line();
+
+        const alpha1 = 0.5 + Math.sin(t * 0.07) * 0.35;
+        const alpha2 = 0.5 + Math.cos(t * 0.06) * 0.35;
+        ctx.globalAlpha = Math.max(0.1, alpha1);
+        ctx.fillText('?', -72, -62 + Math.sin(t * 0.06) * 6);
+        ctx.globalAlpha = Math.max(0.1, alpha2);
+        ctx.fillText('...', 70, -52 + Math.cos(t * 0.05) * 5);
+        ctx.globalAlpha = Math.max(0.05, (alpha1 + alpha2) / 2 * 0.6);
+        ctx.font = 'bold 13px Georgia, serif';
+        ctx.fillText('hmm', 0, -78 + Math.sin(t * 0.04) * 4);
+
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+
+      // ── Laugh bursts ─────────────────────────────────────────────────────
+      if (state === 'laugh' && mouthOpen > 0.55) {
+        const burstTexts = ['HA!', 'HO!', 'HE!', 'HA!'];
+        ctx.save();
+        for (let i = 0; i < 4; i++) {
+          const angle = -0.8 + i * 0.55;
+          const dist  = 85 + Math.sin(laughT * 0.3 + i * 1.5) * 12;
+          const bx    = Math.cos(angle - Math.PI / 2) * dist;
+          const by    = Math.sin(angle - Math.PI / 2) * dist;
+          const sz    = 13 + Math.sin(laughT * 0.5 + i * 2) * 3;
+          const alpha = Math.max(0.05, 0.45 + Math.sin(laughT * 0.5 + i * 2) * 0.45);
+          ctx.globalAlpha = alpha;
+          ctx.font = `bold ${sz}px Georgia, serif`;
+          ctx.textAlign = 'center';
+          ctx.fillStyle = C.burst();
+          ctx.fillText(burstTexts[i], bx + wobble(0, 2), by - 18 + wobble(0, 2));
+        }
+        ctx.restore();
+      }
+
+      ctx.restore(); // end head transform
+    }
+
+    // ─── Update logic ───────────────────────────────────────────────────────────
+    function update() {
+      t++;
+      blinkTimer++;
+
+      // Blink
+      if (blinkTimer > 110 + Math.floor(Math.random() * 80)) {
+        blinkTimer = 0;
+      }
+      if (blinkTimer < 8) {
+        blinkOpen = Math.max(0, 1 - blinkTimer / 4);
+      } else if (blinkOpen < 1) {
+        blinkOpen = Math.min(1, blinkOpen + 0.18);
+      }
+
+      // ── Idle ────────────────────────────────────────────────────────────────
+      if (state === 'idle') {
+        headBobX      = Math.sin(t * 0.04) * 6;
+        headTiltAngle = Math.sin(t * 0.035) * 0.04;
+        stomachBounce = Math.sin(t * 0.05) * 2;
+        bodyShake     = 0;
+        mouthOpen     = 0;
+      }
+
+      // ── Suspense ────────────────────────────────────────────────────────────
+      if (state === 'suspense') {
+        headBobX      = Math.sin(t * 0.055) * 10;
+        headTiltAngle = Math.sin(t * 0.04) * 0.07;
+        stomachBounce = Math.sin(t * 0.06) * 2;
+        bodyShake     = Math.sin(t * 0.09) * 1.5;
+        mouthOpen     = 0;
+
+        jokeTimer++;
+        if (jokeTimer > 190) {
+          // Reveal punchline → trigger laugh
+          document.getElementById('jokePunchline').textContent = jokes[currentJoke][1];
+          state  = 'laugh';
+          laughT = 0;
+        }
+      }
+
+      // ── Laugh ────────────────────────────────────────────────────────────────
+      if (state === 'laugh') {
+        laughT++;
+        const prog  = Math.min(1, laughT / 55);
+        mouthOpen   = prog;
+        headTiltAngle = Math.sin(laughT * 0.18) * 0.20 + 0.14;
+        headBobX    = Math.sin(laughT * 0.26) * 15;
+        bodyShake   = Math.sin(laughT * 0.38) * (7 * prog);
+        stomachBounce = Math.sin(laughT * 0.32) * (14 * prog);
+
+        // Slowly settle after peak
+        if (laughT > 340) {
+          const settle = Math.max(0, 1 - (laughT - 340) / 130);
+          mouthOpen     = settle;
+          bodyShake     *= settle;
+          stomachBounce *= settle;
+          if (laughT > 470) {
+            state = 'idle';
+            document.getElementById('btnJoke').disabled = false;
+          }
+        }
+      }
+    }
+
+    // ─── Public controls ────────────────────────────────────────────────────────
+    function startJoke() {
+      if (state === 'laugh' || state === 'suspense') return;
+      currentJoke = (currentJoke + 1) % jokes.length;
+      state       = 'suspense';
+      jokeTimer   = 0;
+      laughT      = 0;
+      mouthOpen   = 0;
+      document.getElementById('jokeSetup').textContent    = jokes[currentJoke][0];
+      document.getElementById('jokePunchline').textContent = '';
+      document.getElementById('btnJoke').disabled = true;
+    }
+
+    function resetBear() {
+      state         = 'idle';
+      laughT        = 0;
+      jokeTimer     = 0;
+      mouthOpen     = 0;
+      bodyShake     = 0;
+      stomachBounce = 0;
+      headTiltAngle = 0;
+      headBobX      = 0;
+      document.getElementById('jokeSetup').textContent    = '';
+      document.getElementById('jokePunchline').textContent = '';
+      document.getElementById('btnJoke').disabled = false;
+    }
+
+    // ─── Animation loop ─────────────────────────────────────────────────────────
+    function loop() {
+      update();
+      drawBear();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>

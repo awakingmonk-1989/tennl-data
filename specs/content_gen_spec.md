@@ -1,6 +1,6 @@
 # Content Creation Agent Spec
 ## India Discovery Platform — Short Read Article System
-### Version 3.0 · Locked · March 2026
+### Version 3.1 · Locked · March 2026
 
 ---
 
@@ -12,10 +12,9 @@ This spec governs an AI content creation agent that produces short-read articles
 
 **Tone:** Friendly, warm, slightly witty — like advice from a smart friend who has done the research. Never preachy. Never clinical. Never a consultant delivering a report.
 
-**Output format:** Every article produces exactly **3 files**:
+**Output format:** Every article produces exactly **2 files**:
 ```
 {slug}.md     — Structured markdown with embedded JSON metadata at the end
-{slug}.html   — Polished, fully styled standalone HTML article
 {slug}.json   — Standalone machine-readable metadata (same schema as JSON in MD)
 ```
 
@@ -25,28 +24,27 @@ This spec governs an AI content creation agent that produces short-read articles
 
 ### 2.1 How Topics Decompose
 
-A **topic** is a broad category. A **sub-topic** is one focused, specific article. Each sub-topic is a **completely independent article** — its own MD, HTML, and JSON file. No sub-topic is embedded inside another sub-topic's file.
+A **topic** is a broad category. A **sub-topic** is one focused, specific article. Each sub-topic is a **completely independent article** — its own MD and JSON file. No sub-topic is embedded inside another sub-topic's file.
 
 ```
 Topic: Life Hacks
-  └─ Sub-topic: Focus & Attention         → lifehacks_focus.md/html/json
-  └─ Sub-topic: Morning Routine           → lifehacks_morning.md/html/json
-  └─ Sub-topic: Productivity & Tasks      → lifehacks_productivity.md/html/json
-  └─ Sub-topic: Home Organization         → lifehacks_home.md/html/json
-  └─ Sub-topic: Digital Habits & Phone    → lifehacks_digital.md/html/json
+  └─ Sub-topic: Focus & Attention         → lifehacks_focus.md/json
+  └─ Sub-topic: Morning Routine           → lifehacks_morning.md/json
+  └─ Sub-topic: Productivity & Tasks      → lifehacks_productivity.md/json
+  └─ Sub-topic: Home Organization         → lifehacks_home.md/json
+  └─ Sub-topic: Digital Habits & Phone    → lifehacks_digital.md/json
 
 Topic: Home Cooking
-  └─ Sub-topic: Kitchen Hacks             → cooking_kitchenhacks.md/html/json
-  └─ Sub-topic: Sunday Prep Mastery       → cooking_sundayprep.md/html/json
-  └─ Sub-topic: Indian Fusion Recipes     → cooking_fusion.md/html/json
-  └─ Sub-topic: Ayurveda & Food Wisdom    → cooking_ayurveda.md/html/json
+  └─ Sub-topic: Kitchen Hacks             → cooking_kitchenhacks.md/json
+  └─ Sub-topic: Sunday Prep Mastery       → cooking_sundayprep.md/json
+  └─ Sub-topic: Indian Fusion Recipes     → cooking_fusion.md/json
+  └─ Sub-topic: Ayurveda & Food Wisdom    → cooking_ayurveda.md/json
 ```
 
 ### 2.2 File Naming Convention
 
 ```
 {topic_slug}_{subtopic_slug}.md
-{topic_slug}_{subtopic_slug}.html
 {topic_slug}_{subtopic_slug}.json
 ```
 
@@ -513,7 +511,6 @@ This schema applies to both the embedded JSON block in the `.md` file and the st
 
   "file_references": {
     "md": "lifehacks_focus.md",
-    "html": "lifehacks_focus.html",
     "json": "lifehacks_focus.json"
   },
 
@@ -528,59 +525,15 @@ This schema applies to both the embedded JSON block in the `.md` file and the st
 
 ---
 
-## PART 8: HTML FILE SPECIFICATION
+## PART 8: UI GENERATION SCOPE (OUT OF SCOPE FOR THIS SPEC VERSION)
 
-### 8.1 One HTML Per Sub-topic Article
+This spec version does **not** mandate HTML generation by the content agent.
 
-Each sub-topic article is a **standalone HTML file**. Never combine multiple sub-topic articles into one HTML. Never embed sub-topic content as a section inside another sub-topic's HTML.
+The content agent output is limited to:
+- `.md` article output
+- `.json` typed metadata output
 
-### 8.2 Visual Identity
-
-- Each HTML file gets a **distinct visual identity** — different font pairing, different color palette, different hero treatment
-- Alternate between light and dark themes across sub-topics within a topic
-- Never use: Arial, Inter, Roboto, system-ui as the primary display font
-- Use Google Fonts via CDN — choose characterful, distinctive pairings
-- CSS variables for all colors — no hardcoded hex values in component styles
-- No generic AI-slop aesthetics (purple gradients on white, predictable card patterns)
-
-### 8.3 Required Structural Elements
-
-Every HTML must contain:
-- Hero header: article title, category breadcrumb pill, read time, word count, audience, date
-- Content safety badges: green "✓ Content Safe" + blue "⊕ Curated · Verified Sources"
-- Sections with emoji label + h2 heading
-- Quick Reference block (if article includes one)
-- Sources footer
-- Mobile responsive (works on 375px viewport)
-
-### 8.4 Section Rendering
-
-**Pattern A sections:** Full prose inline. Fully readable. No interaction required. No buttons.
-
-**Pattern B sections:** 
-- Brief intro paragraph (fully written, visible always)
-- Grid of **summary cards** — each card shows: item title + 1–2 line summary
-- Clicking a card triggers the sub-section panel (overlay or inline expand)
-- Sub-section panel has a **Back/Close button** that returns to main article
-- Only one sub-section open at a time
-- Smooth CSS transition animation on open/close
-
-### 8.5 Sub-section Rendering (Pattern B)
-
-Sub-section content is stored in the HTML as JavaScript data (JSON/strings). On card click, the content is rendered from that data — not fetched from a server (since this is a static file). This simulates lazy-fetch behavior in a standalone file.
-
-The `content_md` from the JSON is parsed to HTML using a lightweight inline markdown renderer in the script.
-
-### 8.6 Animations
-
-- Hero elements: staggered fade-up on load (CSS animation, `animation-delay`)
-- Section transitions: subtle fade-up as user scrolls (optional, CSS only preferred)
-- Sub-section panel open/close: smooth transition (max-height + opacity, or slide)
-- No heavy JS libraries for animation — CSS-only wherever possible
-
-### 8.7 No Content Placeholders in HTML
-
-Every section in the HTML must contain real, fully written content. No `[Section prose here]`. No skeleton text. No `<!-- TODO -->` comments. The HTML file is the final deliverable.
+UI generation guidelines and templates are maintained separately. This spec continues to define content structure (page/post/deep-dive hierarchy) and typed metadata needed by downstream rendering systems.
 
 ---
 
@@ -636,7 +589,7 @@ Every section in the HTML must contain real, fully written content. No `[Section
 
 ### 9.2 Sub-section Content in MD
 
-Sub-section `content_md` is stored inside the JSON block at the end of the MD file, within each sub-section's entry. It is **not** rendered as a separate visible section in the MD body — it lives in the JSON so a rendering engine or HTML generator can access it.
+Sub-section `content_md` is stored inside the JSON block at the end of the MD file, within each sub-section's entry. It is **not** rendered as a separate visible section in the MD body — it lives in the JSON so a downstream renderer can access it.
 
 ### 9.3 No Skeleton Content
 
@@ -897,20 +850,8 @@ Before any article is considered complete and files are output, verify every poi
 - [ ] `content_sources` contains only URLs that actually contributed to article content
 - [ ] `expansion_pattern` field correctly set per section ("A" or "B")
 - [ ] Sub-sections have `summary` field (1–2 lines for the card display)
-- [ ] `file_references` links correctly to all 3 files for this article
+- [ ] `file_references` links correctly to both files for this article (`md` and `json`)
 - [ ] `variant` field correctly set
-
-### HTML
-- [ ] Standalone file — not combined with any other sub-topic
-- [ ] Distinct visual identity from other articles in same topic
-- [ ] Google Fonts loaded via CDN — no generic fonts
-- [ ] All section prose fully written and visible inline
-- [ ] Pattern B sections: summary cards displayed, sub-section content in JS data, click opens panel
-- [ ] Back button returns to article from sub-section panel
-- [ ] Content safety badges present in hero
-- [ ] Sources footer present
-- [ ] Mobile responsive — works at 375px minimum width
-- [ ] No placeholder text, skeleton content, or TODO comments
 
 ### MD File
 - [ ] Complete article body — no placeholders
@@ -955,6 +896,6 @@ Before any article is considered complete and files are output, verify every poi
 
 ---
 
-*Spec version: 3.0 · Locked March 2026*
+*Spec version: 3.1 · Locked March 2026*
 *Applies to: Life Hacks (5 sub-topics), Home Cooking (4 sub-topics)*
-*Total expected output: 9 sub-topics × 3 files = 27 files, plus 2 MD variants per article = up to 36 MD files*
+*Total expected output: 9 sub-topics × 2 files = 18 files, plus 2 MD variants per article = up to 18 MD files*

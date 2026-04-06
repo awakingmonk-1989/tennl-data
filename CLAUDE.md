@@ -167,3 +167,40 @@ One article per run. One page. 3–5 posts. Deep dives where applicable.
 | Medium Read | 500–1000 words | `is_medium_content: true` |
 | Hard Cap | 1200 words | Never exceed |
 | Deep Dive | 200–500 words | Per panel, hard cap 500 |
+
+---
+
+## WORKFLOW RUNTIME (IMPLEMENTATION NOTES)
+
+This repo is a monorepo. Python code lives under `python/`, Java modules under `java/`, and infra code under `infra/`.
+
+### Current phase: Backend Dev — Workflow Creation
+
+**Phase 1 (complete):** The LlamaIndex-based agentic workflow is functional end-to-end.
+Content generation, LLM evaluation (moderation + quality), bounded refine loop,
+and output artifact writing all work against Azure OpenAI (`gpt-5.4-mini`).
+
+**Phase 2 (next):** Persistence & structured logging. See the detailed progress
+spec and handoff guide:
+
+> **`python/tennl/batch/workflows/agent_workflow_progress.md`**
+>
+> Contains: completed work inventory, known limitations, phased TODO list
+> (persistence, logging, quality improvements, integration), file map,
+> and quick-start instructions. **Read this first when picking up the project.**
+
+### Python packaging + environment (strict)
+
+- Python is **strictly `uv`-managed**.
+- Virtualenv for this workflow project is **strictly** at: `python/tennl/batch/.venv/`.
+- Python version is **strictly** 3.13 (\(`requires-python = "==3.13.*"`\)).
+- Do **not** use system/global Python. Always run via `uv` with an explicit project environment:
+  - `UV_PROJECT_ENVIRONMENT="python/tennl/batch/.venv" uv run ...`
+
+### Agentic workflow implementation
+
+- Package namespace: `tennl.batch.workflows`
+- Source location: `python/tennl/batch/workflows/`
+- Runner: `UV_PROJECT_ENVIRONMENT="python/tennl/batch/.venv" uv run python -m tennl.batch.workflows ...`
+- Tracing: rolling JSONL file at `logs/workflow_traces.jsonl` (includes workflow stage records and LlamaIndex instrumentation events).
+- Reference samples: `resources/sample_output_reference.{md,json}` (included in generation + refinement prompts as structural anchors).

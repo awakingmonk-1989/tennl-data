@@ -1,0 +1,146 @@
+{
+  "global_top_10": [
+    {
+      "rank": 1,
+      "topic": "Money & Life",
+      "subtopic": "Personal Finance Reality",
+      "best_fit_formats": ["reels", "article", "long_article"],
+      "why_it_makes_the_cut_now": "Strong fit with cost-of-living pressure, saving/spending anxiety, financial transparency interest, and practical everyday decision-making."
+    },
+    {
+      "rank": 2,
+      "topic": "AI for Life",
+      "subtopic": "AI in Daily Life",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with AI curiosity, productivity experimentation, tool discovery behavior, and demand for practical non-hyped use cases."
+    },
+    {
+      "rank": 3,
+      "topic": "Work & Skills",
+      "subtopic": "Skill ROI",
+      "best_fit_formats": ["article", "long_article"],
+      "why_it_makes_the_cut_now": "Strong fit with career uncertainty, upskilling pressure, time-vs-outcome evaluation, and demand for useful skill prioritization."
+    },
+    {
+      "rank": 4,
+      "topic": "Career Reality",
+      "subtopic": "Behind-the-Scenes of Real Work",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with authenticity preference, curiosity about real jobs, non-glossy work narratives, and creator-style workplace storytelling."
+    },
+    {
+      "rank": 5,
+      "topic": "Lifestyle",
+      "subtopic": "Solo Living / Urban Life Reality",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with independent living realities, city-life adaptation, routine management, and relatable everyday adulting content."
+    },
+    {
+      "rank": 6,
+      "topic": "Productivity",
+      "subtopic": "Anti-Hustle Productivity",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with burnout fatigue, rejection of extreme hustle culture, preference for calm effectiveness, and realistic routine design."
+    },
+    {
+      "rank": 7,
+      "topic": "Decision Making",
+      "subtopic": "Decision Frameworks",
+      "best_fit_formats": ["article", "long_article"],
+      "why_it_makes_the_cut_now": "Strong fit with decision fatigue, option overload, need for clarity, and growing interest in structured practical thinking."
+    },
+    {
+      "rank": 8,
+      "topic": "Practical Self-Improvement",
+      "subtopic": "Realistic Self-Improvement",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with demand for grounded growth, rejection of preachy self-help, and preference for small realistic improvement paths."
+    },
+    {
+      "rank": 9,
+      "topic": "Learning",
+      "subtopic": "Fast Skill Acquisition",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with short attention spans, practical learning goals, curiosity-led development, and interest in faster learning systems."
+    },
+    {
+      "rank": 10,
+      "topic": "Lifestyle Systems",
+      "subtopic": "Life Admin / Everyday Systems",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with everyday chaos reduction, organization habits, adulting friction, and demand for useful low-stress life systems."
+    }
+  ],
+  "internal_top_10": [
+    {
+      "rank": 1,
+      "topic": "Career & Growth",
+      "subtopic": "Career Switch Stories",
+      "best_fit_formats": ["article", "long_article"],
+      "why_it_makes_the_cut_now": "Strong fit with career fluidity, job shifts, AI disruption, reinvention journeys, and identity change in work."
+    },
+    {
+      "rank": 2,
+      "topic": "Career & Growth",
+      "subtopic": "Freelancing & Independent Work",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with side-income interest, independent work aspiration, flexible career models, and creator-led work culture."
+    },
+    {
+      "rank": 3,
+      "topic": "Technology for Life",
+      "subtopic": "Useful Everyday Tools",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with app/tool discovery behavior, AI-assisted workflows, practical utility, and quick value demonstration."
+    },
+    {
+      "rank": 4,
+      "topic": "Personal Development",
+      "subtopic": "Habit Building",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with routine improvement interest, consistency struggles, realistic self-management, and small-change content."
+    },
+    {
+      "rank": 5,
+      "topic": "Productivity & Focus",
+      "subtopic": "Work-Life Balance",
+      "best_fit_formats": ["article"],
+      "why_it_makes_the_cut_now": "Strong fit with boundary-setting, work pressure, sustainable routines, and quality-of-life oriented productivity."
+    },
+    {
+      "rank": 6,
+      "topic": "Writing & Expression",
+      "subtopic": "Personal Storytelling",
+      "best_fit_formats": ["reels", "article", "long_article"],
+      "why_it_makes_the_cut_now": "Strong fit with authenticity-led content, reflective narratives, personal lessons, and emotionally resonant lived experiences."
+    },
+    {
+      "rank": 7,
+      "topic": "Travel & Exploration",
+      "subtopic": "Budget Travel Ideas",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with affordable escapism, practical planning, aspirational discovery, and high visual/content shareability."
+    },
+    {
+      "rank": 8,
+      "topic": "Entrepreneurship & Ideas",
+      "subtopic": "Small Projects",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with maker culture, side-project energy, learning-by-building, and visible progress-oriented content."
+    },
+    {
+      "rank": 9,
+      "topic": "Learning & Knowledge",
+      "subtopic": "Concept Simplification",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with explain-like-I’m-busy behavior, quick learning demand, clarity-first education, and high shareability of simple insights."
+    },
+    {
+      "rank": 10,
+      "topic": "Home & Living",
+      "subtopic": "Daily Living Hacks",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with everyday convenience, low-effort improvements, adulting shortcuts, and instantly useful content."
+    }
+  ]
+}

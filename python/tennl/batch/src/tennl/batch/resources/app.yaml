@@ -1,0 +1,27 @@
+content_type: articles    # Override via TENNL_CONTENT_TYPE env var
+content_types:
+  - articles
+  - jokes
+  - short_reads
+  - long_reads
+
+llm:
+  # Providers are configured here; select the active one via
+  # TENNL_LLM_PROVIDER=openai|litellm|azure-foundry-openai
+  providers:
+    - name: openai
+      url: ""
+      auth_token: ""
+    - name: litellm
+      url: ""
+      auth_token: ""
+    - name: azure-foundry-openai
+      # Base endpoint (NOT the /openai/responses path):
+      # Example: https://<resource>.cognitiveservices.azure.com/
+      url: "https://hello-mmyxynmb-eastus2.cognitiveservices.azure.com/"
+      auth_token: "" # leave blank; loaded from secrets/env at runtime
+      api_version: "2025-04-01-preview"
+      # Azure requires a deployment name (aka engine). Set this to your Azure deployment.
+      engine: "gpt-5.4-mini"
+      model: "gpt-5.4-mini"
+

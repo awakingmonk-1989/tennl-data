@@ -1,0 +1,74 @@
+{
+  "india_broad_audience_safe_global_top_10": [
+    {
+      "rank": 1,
+      "topic": "Money & Life",
+      "subtopic": "Personal Finance Reality",
+      "best_fit_formats": ["reels", "article", "long_article"],
+      "why_it_makes_the_cut_now": "Strong fit with cost-of-living pressure, saving/spending awareness, value-seeking behavior, and broad relevance across students, families, salaried users, and self-employed audiences."
+    },
+    {
+      "rank": 2,
+      "topic": "Food & Life",
+      "subtopic": "Affordable Everyday Food / Smart Eating",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with India-wide food interest, daily utility, budget sensitivity, home-led content behavior, and very broad non-professional audience appeal."
+    },
+    {
+      "rank": 3,
+      "topic": "Travel & Exploration",
+      "subtopic": "Budget Travel / Local Escapes",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with affordable escapism, regional discovery, weekend travel planning, visual shareability, and mass appeal across age groups."
+    },
+    {
+      "rank": 4,
+      "topic": "Technology for Life",
+      "subtopic": "AI in Daily Life",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with AI curiosity, practical tool discovery, time-saving behavior, and interest in simple real-life use cases rather than technical depth."
+    },
+    {
+      "rank": 5,
+      "topic": "Home & Living",
+      "subtopic": "Daily Living Hacks / Life Admin Systems",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with everyday convenience, household organization, chaos reduction, and instantly useful content for a very wide audience."
+    },
+    {
+      "rank": 6,
+      "topic": "Lifestyle",
+      "subtopic": "Solo Living / Urban Life Reality",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with independent living, city adaptation, budgeting, routines, and relatable adulting content without entering sensitive areas."
+    },
+    {
+      "rank": 7,
+      "topic": "Learning",
+      "subtopic": "Fast Skill Acquisition / Practical Learning",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with curiosity-driven learning, practical self-improvement, mobile-first consumption, and broad utility beyond professional audiences."
+    },
+    {
+      "rank": 8,
+      "topic": "Productivity",
+      "subtopic": "Anti-Hustle Productivity / Everyday Efficiency",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with burnout fatigue, preference for calm efficiency, sustainable routines, and useful day-to-day improvements without aggressive self-help tone."
+    },
+    {
+      "rank": 9,
+      "topic": "Creativity & Expression",
+      "subtopic": "Personal Storytelling / Real Life Stories",
+      "best_fit_formats": ["reels", "article", "long_article"],
+      "why_it_makes_the_cut_now": "Strong fit with authenticity-led content, relatable lived experiences, emotional resonance, and strong creator-style engagement patterns."
+    },
+    {
+      "rank": 10,
+      "topic": "Entertainment-Lite Lifestyle",
+      "subtopic": "Small Joys / Weekend Ideas / Refreshing Routines",
+      "best_fit_formats": ["reels", "article"],
+      "why_it_makes_the_cut_now": "Strong fit with stress-light content demand, low-stakes escapism, refresh value, and broad shareability across varied audience segments."
+    }
+  ]
+}

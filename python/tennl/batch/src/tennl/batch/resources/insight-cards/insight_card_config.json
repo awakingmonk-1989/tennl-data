@@ -1,0 +1,279 @@
+{
+  "_meta": {
+    "version": "2.0",
+    "purpose": "Seed pool for insight card orchestrator. Values are axes of variation, not content. LLM generates actual topics, titles and card text at runtime from these seeds.",
+    "usage": "Orchestrator samples one theme and one human_context from the category-specific pool per run. All other slots rotate globally.",
+    "excluded_always": [
+      "news",
+      "current events",
+      "statistics",
+      "data references",
+      "citations",
+      "harmful",
+      "hateful",
+      "abusive",
+      "sexual",
+      "unsafe"
+    ]
+  },
+  "hook_types": [
+    "contrarian-claim",
+    "question-led",
+    "named-concept",
+    "story-opening",
+    "analogy-led"
+  ],
+  "registers": [
+    "wonder",
+    "urgency",
+    "comfort",
+    "challenge",
+    "nostalgia"
+  ],
+  "opening_word_classes": [
+    "article",
+    "verb",
+    "proper-noun",
+    "question-word"
+  ],
+  "title_style_hints": {
+    "_note": "Sampled once per run and passed to LLM as guidance for title generation. Not content — just a structural cue.",
+    "styles": [
+      "short declarative statement",
+      "intriguing question",
+      "named concept reveal",
+      "rule or principle framing",
+      "the X that Y construction",
+      "unexpected juxtaposition"
+    ]
+  },
+  "categories": {
+    "Finance": {
+      "themes": [
+        "behaviour and habit",
+        "perception and bias",
+        "hidden cost",
+        "counterintuitive mechanism",
+        "everyday paradox",
+        "invisible system",
+        "gap between belief and action",
+        "limits of common wisdom"
+      ],
+      "human_contexts": [
+        "everyday decisions",
+        "long-term thinking",
+        "money and resources",
+        "time and attention",
+        "identity and self-perception",
+        "work and focus"
+      ]
+    },
+    "Technology": {
+      "themes": [
+        "behaviour and habit",
+        "perception and bias",
+        "hidden cost",
+        "counterintuitive mechanism",
+        "invisible system",
+        "unspoken rule",
+        "gap between belief and action",
+        "limits of common wisdom"
+      ],
+      "human_contexts": [
+        "everyday decisions",
+        "work and focus",
+        "time and attention",
+        "identity and self-perception",
+        "relationships and trust",
+        "environment and space"
+      ]
+    },
+    "Science": {
+      "themes": [
+        "counterintuitive mechanism",
+        "perception and bias",
+        "forgotten knowledge",
+        "origins of something familiar",
+        "limits of common wisdom",
+        "everyday paradox",
+        "invisible system"
+      ],
+      "human_contexts": [
+        "everyday decisions",
+        "learning and growth",
+        "rest and recovery",
+        "environment and space",
+        "long-term thinking",
+        "identity and self-perception"
+      ]
+    },
+    "Life": {
+      "themes": [
+        "behaviour and habit",
+        "unspoken rule",
+        "everyday paradox",
+        "gap between belief and action",
+        "counterintuitive mechanism",
+        "perception and bias",
+        "limits of common wisdom"
+      ],
+      "human_contexts": [
+        "everyday decisions",
+        "relationships and trust",
+        "identity and self-perception",
+        "time and attention",
+        "long-term thinking",
+        "learning and growth",
+        "rest and recovery"
+      ]
+    },
+    "Psychology": {
+      "themes": [
+        "behaviour and habit",
+        "perception and bias",
+        "counterintuitive mechanism",
+        "gap between belief and action",
+        "invisible system",
+        "everyday paradox",
+        "limits of common wisdom",
+        "unspoken rule"
+      ],
+      "human_contexts": [
+        "identity and self-perception",
+        "relationships and trust",
+        "everyday decisions",
+        "work and focus",
+        "long-term thinking",
+        "time and attention",
+        "learning and growth"
+      ]
+    },
+    "Culture": {
+      "themes": [
+        "unspoken rule",
+        "cultural difference",
+        "perception and bias",
+        "behaviour and habit",
+        "everyday paradox",
+        "forgotten knowledge",
+        "gap between belief and action"
+      ],
+      "human_contexts": [
+        "relationships and trust",
+        "identity and self-perception",
+        "environment and space",
+        "everyday decisions",
+        "time and attention",
+        "learning and growth"
+      ]
+    },
+    "History": {
+      "themes": [
+        "origins of something familiar",
+        "forgotten knowledge",
+        "counterintuitive mechanism",
+        "unspoken rule",
+        "cultural difference",
+        "perception and bias",
+        "limits of common wisdom",
+        "invisible system"
+      ],
+      "human_contexts": [
+        "long-term thinking",
+        "identity and self-perception",
+        "environment and space",
+        "relationships and trust",
+        "learning and growth",
+        "everyday decisions"
+      ]
+    },
+    "Wellness": {
+      "themes": [
+        "behaviour and habit",
+        "counterintuitive mechanism",
+        "hidden cost",
+        "everyday paradox",
+        "gap between belief and action",
+        "limits of common wisdom",
+        "perception and bias"
+      ],
+      "human_contexts": [
+        "rest and recovery",
+        "everyday decisions",
+        "identity and self-perception",
+        "long-term thinking",
+        "work and focus",
+        "environment and space",
+        "time and attention"
+      ]
+    },
+    "Urban Life": {
+      "themes": [
+        "invisible system",
+        "hidden cost",
+        "unspoken rule",
+        "behaviour and habit",
+        "everyday paradox",
+        "counterintuitive mechanism",
+        "perception and bias"
+      ],
+      "human_contexts": [
+        "environment and space",
+        "everyday decisions",
+        "time and attention",
+        "relationships and trust",
+        "work and focus",
+        "identity and self-perception"
+      ]
+    },
+    "Mindfulness": {
+      "themes": [
+        "counterintuitive mechanism",
+        "perception and bias",
+        "behaviour and habit",
+        "everyday paradox",
+        "gap between belief and action",
+        "limits of common wisdom"
+      ],
+      "human_contexts": [
+        "rest and recovery",
+        "time and attention",
+        "identity and self-perception",
+        "everyday decisions",
+        "relationships and trust",
+        "work and focus"
+      ]
+    },
+    "Travel": {
+      "themes": [
+        "cultural difference",
+        "perception and bias",
+        "unspoken rule",
+        "counterintuitive mechanism",
+        "everyday paradox",
+        "forgotten knowledge",
+        "hidden cost"
+      ],
+      "human_contexts": [
+        "identity and self-perception",
+        "environment and space",
+        "relationships and trust",
+        "everyday decisions",
+        "time and attention",
+        "learning and growth"
+      ]
+    }
+  },
+  "diversity_matrix": {
+    "_note": "Slot names used by orchestrator to track rotation state. theme and human_context are now sampled from the category-specific pool, not a global array. Each slot rotates independently.",
+    "slots": [
+      "category",
+      "hook_type",
+      "register",
+      "opening_word_class",
+      "theme",
+      "human_context",
+      "title_style"
+    ],
+    "strategy": "round-robin per slot independently — not as a fixed tuple. Parallel workers each get a unique offset so they never sample the same combination simultaneously."
+  }

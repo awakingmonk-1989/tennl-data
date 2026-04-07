@@ -1,0 +1,26 @@
+# ===========================================================================
+# RunPod Serverless Worker — Dockerfile for vLLM + Qwen
+# ===========================================================================
+# Build:  docker build -t tennl-qwen-worker -f runpod_Dockerfile .
+# Push:   docker tag tennl-qwen-worker <your-dockerhub>/tennl-qwen-worker:latest
+#         docker push <your-dockerhub>/tennl-qwen-worker:latest
+# Deploy: Use image URL in RunPod Serverless → New Endpoint → Custom Worker
+# ===========================================================================
+
+FROM runpod/worker-vllm:stable-cuda12.4.1-v0.7.3
+
+ENV MODEL_NAME="Qwen/Qwen2.5-7B-Instruct"
+ENV HF_HUB_ENABLE_HF_TRANSFER=1
+ENV VLLM_GPU_MEMORY_UTILIZATION=0.90
+ENV MAX_MODEL_LEN=8192
+ENV MAX_NUM_BATCHED_TOKENS=16384
+ENV DTYPE=bfloat16
+
+# Pre-download model weights into image (faster cold starts)
+RUN pip install huggingface_hub hf_transfer && \
+    python -c "from huggingface_hub import snapshot_download; \
+    snapshot_download('${MODEL_NAME}', local_dir='/models/${MODEL_NAME}')"
+
+# If using custom handler instead of built-in vLLM worker:
+# COPY handler.py /app/handler.py
+# CMD ["python", "/app/handler.py"]

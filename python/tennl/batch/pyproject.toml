@@ -1,0 +1,29 @@
+[project]
+name = "tennl-batch"
+version = "0.1.0"
+requires-python = "==3.13.*"
+dependencies = [
+  "azure-data-tables>=12.6.0",
+  "azure-storage-blob>=12.24.0",
+  "llama-index-core>=0.14.19",
+  "llama-index-llms-azure-openai>=0.5.3",
+  "llama-index-llms-litellm>=0.7.1",
+  "llama-index-llms-openai>=0.7.5",
+  "llama-index-llms-openai-like>=0.7.1",
+  "llama-index-workflows>=2.17.1",
+  "pydantic>=2.12.5",
+  "pydantic-settings>=2.11.0",
+  "psycopg[binary]>=3.2.0",
+  "pyyaml>=6.0.3",
+  "psycopg-pool>=3.2.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tennl"]
+
+
+

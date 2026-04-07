@@ -1,0 +1,48 @@
+{
+  "humour_style": [
+    "observational",
+    "dry",
+    "playful",
+    "deadpan",
+    "misdirection",
+    "self_aware"
+  ],
+  "angle": [
+    "small_truth",
+    "expectation_vs_reality",
+    "harmless_exaggeration",
+    "overthinking",
+    "tiny_frustration",
+    "daily_absurdity"
+  ],
+  "emotional_flavour": [
+    "light",
+    "teasing",
+    "knowingly_exasperated",
+    "warm"
+  ],
+  "relatability_anchor": [
+    "daily_life",
+    "home",
+    "work",
+    "phone",
+    "food",
+    "family",
+    "friends"
+  ],
+  "pacing_style": [
+    "fast_setup_quick_punch",
+    "two_step_reveal",
+    "straight_setup_twist_end"
+  ],
+  "twist_style": [
+    "reversal",
+    "self_own",
+    "logic_flip",
+    "mild_escalation"
+  ],
+  "intensity": [
+    "light",
+    "medium_clean"
+  ]
+}

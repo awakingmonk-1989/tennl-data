@@ -1,4 +1,4 @@
-# Claude Agent — India Discovery Platform
+# Codex Agent — India Discovery Platform
 ## Content Generation System
 ### Version 1.0 · March 2026
 

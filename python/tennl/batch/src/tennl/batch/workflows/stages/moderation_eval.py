@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
+from ..runtime_assets import read_article_asset
 from ..settings import AppSettings
 from ..models import ModerationCheck, ModerationReport
 
@@ -86,15 +86,6 @@ def run_moderation_checks(article_json: dict[str, Any]) -> ModerationReport:
     )
 
 
-def _repo_root() -> Path:
-    # .../src/tennl/batch/workflows/stages/moderation_eval.py -> repo root (tennl-data/) is 8 parents up
-    return Path(__file__).resolve().parents[8]
-
-
-def _read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
-
-
 def _extract_json_object(text: str) -> dict[str, Any]:
     text = text.strip()
     if text.startswith("```"):
@@ -115,10 +106,9 @@ def _extract_json_object(text: str) -> dict[str, Any]:
 
 
 async def run_moderation_with_llm(article_md: str, article_json: dict[str, Any]) -> ModerationReport:
-    root = _repo_root()
-    prompt = _read_text(root / "prompts" / "eval_pass1_moderation_prompt.md")
-    content_spec = _read_text(root / "specs" / "content_gen_spec.md")
-    skill_mod = _read_text(root / "skills" / "skill_content_moderation.md")
+    prompt = read_article_asset("prompts", "eval_pass1_moderation_prompt.md")
+    content_spec = read_article_asset("specs", "content_gen_spec.md")
+    skill_mod = read_article_asset("skills", "skill_content_moderation.md")
 
     # Runtime evaluator rules (do not edit prompt files).
     md_upper = (article_md or "").upper()
@@ -152,4 +142,3 @@ async def run_moderation_with_llm(article_md: str, article_json: dict[str, Any])
     # Ensure violations are consistent.
     report.violations = [c for c in report.checks if not c.ok]
     return report
-

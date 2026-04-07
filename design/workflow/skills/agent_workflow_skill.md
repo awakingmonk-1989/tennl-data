@@ -10,10 +10,10 @@ This skill enables the agent to translate the Agent Workflow Spec and HLD
 into a runtime-specific implementation for any target framework or language.
 
 **Specs this skill references:**
-- `/workflow/specs/agent_workflow_spec.md` — workflow contract and stage definitions
-- `/workflow/design/workflow_hld.md` — architecture and component design
-- `/workflow/specs/workflow_data_model_spec.md` — persistence schema
-- `/workflow/design/workflow_data_model_design.md` — persistence design
+- `/design/workflow/specs/agent_workflow_spec.md` — workflow contract and stage definitions
+- `/design/workflow/design-docs/workflow_hld.md` — architecture and component design
+- `/design/workflow/specs/workflow_data_model_spec.md` — persistence schema
+- `/design/workflow/design-docs/workflow_data_model_design.md` — persistence design
 
 ---
 

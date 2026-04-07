@@ -7,14 +7,40 @@ content_types:
 
 llm:
   # Providers are configured here; select the active one via
-  # TENNL_LLM_PROVIDER=openai|litellm|azure-foundry-openai
+  # TENNL_LLM_PROVIDER=openai|litellm|azure-foundry-openai|anthropic|openai_like
   providers:
     - name: openai
       url: ""
       auth_token: ""
+      model: "gpt-4o"
+      temperature: 0.85
+      max_retries: 3
+
     - name: litellm
       url: ""
       auth_token: ""
+      model: "anthropic/claude-sonnet-4-20250514"
+      temperature: 0.85
+      max_retries: 3
+
+    - name: anthropic
+      url: ""
+      auth_token: ""  # loaded from ANTHROPIC_API_KEY env var at runtime
+      model: "claude-sonnet-4-20250514"
+      temperature: 0.85
+      max_retries: 3
+
+    - name: openai_like
+      # Any OpenAI-compatible endpoint: Ollama, vLLM, Together, Groq, etc.
+      url: "http://localhost:11434/v1"
+      auth_token: "none"
+      model: "mistral-7b-instruct"
+      temperature: 0.85
+      max_retries: 3
+      context_window: 32768
+      is_chat_model: true
+      is_function_calling_model: false
+
     - name: azure-foundry-openai
       # Base endpoint (NOT the /openai/responses path):
       # Example: https://<resource>.cognitiveservices.azure.com/
@@ -24,4 +50,6 @@ llm:
       # Azure requires a deployment name (aka engine). Set this to your Azure deployment.
       engine: "gpt-5.4-mini"
       model: "gpt-5.4-mini"
+      temperature: 0.85
+      max_retries: 3
 

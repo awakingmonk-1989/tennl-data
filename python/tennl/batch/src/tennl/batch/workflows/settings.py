@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 import importlib.resources as ir
 import os
@@ -12,8 +13,9 @@ from pydantic_settings.sources import PydanticBaseSettingsSource
 
 
 ContentType = Literal["articles", "jokes", "short_reads", "long_reads"]
-ProviderName = Literal["openai", "litellm", "azure-foundry-openai"]
+ProviderName = Literal["openai", "litellm", "azure-foundry-openai", "anthropic", "openai_like"]
 
+logger = logging.getLogger(__name__)
 
 class LlmProviderConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
@@ -26,6 +28,13 @@ class LlmProviderConfig(BaseModel):
     model: str = "gpt-4o-mini"
     engine: Optional[str] = None  # Azure OpenAI often requires this
     api_version: Optional[str] = None
+
+    # LLM generation parameters
+    temperature: Optional[float] = None
+    max_retries: Optional[int] = None
+    context_window: Optional[int] = None
+    is_chat_model: Optional[bool] = None
+    is_function_calling_model: Optional[bool] = None
 
 
 class LlmSettings(BaseModel):
@@ -80,7 +89,7 @@ def _deep_merge_dicts(base: dict[str, Any], override: dict[str, Any]) -> dict[st
     return out
 
 
-def _load_yaml_settings() -> dict[str, Any]:
+def _load_yaml_settings(config_file: str = "app.yaml") -> dict[str, Any]:
     """Load settings from packaged YAML files shipped with the wheel.
 
     Reads ``app.yaml`` (main config) and ``prompts.yaml`` (prompt templates).
@@ -88,8 +97,9 @@ def _load_yaml_settings() -> dict[str, Any]:
     from source checkout and from an installed wheel.
     """
     try:
-        text = ir.files("tennl.batch").joinpath("resources", "app.yaml").read_text(encoding="utf-8")
-    except Exception:
+        text = ir.files("tennl.batch").joinpath("resources", config_file).read_text(encoding="utf-8")
+    except Exception as e:
+        logger.error(f"Unable to load config file. Error: {e!s}", exc_info=True)
         return {}
 
     raw = yaml.safe_load(text) or {}
@@ -101,7 +111,8 @@ def _load_yaml_settings() -> dict[str, Any]:
         prompts_raw = yaml.safe_load(prompts_text) or {}
         if isinstance(prompts_raw, dict):
             raw["prompts"] = prompts_raw
-    except Exception:
+    except Exception as e:
+        logger.error(f"Unable to load prompt config file. Error: {e!s}", exc_info=True)
         pass
 
     return raw

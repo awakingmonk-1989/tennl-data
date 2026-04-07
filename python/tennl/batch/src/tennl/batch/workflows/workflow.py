@@ -5,7 +5,6 @@ import logging
 import time
 import traceback
 import uuid
-from pathlib import Path
 from typing import Optional
 
 from llama_index.core.workflow import Context, Workflow, step
@@ -43,6 +42,7 @@ from .stages.moderation_eval import run_moderation_checks, run_moderation_with_l
 from .stages.quality_eval import run_quality_and_schema_eval, run_quality_with_llm
 from .stages.refiner import build_refinement_directives
 from .stages.schema_validation import validate_article_schema
+from .runtime_assets import read_article_asset
 from .tracing import safe_summary, setup_rolling_run_logger
 
 _log = logging.getLogger("tennl.workflow.run")
@@ -175,9 +175,7 @@ class ContentGenWorkflow(Workflow):
                 attempt = state.refine_attempts + 2
 
             sub_topic_description = inp.sub_topic
-            original_prompt_text = (
-                Path(__file__).resolve().parents[7].joinpath("prompts", "conten_gen_prompt_page_post.md").read_text(encoding="utf-8")
-            )
+            original_prompt_text = read_article_asset("prompts", "conten_gen_prompt_page_post.md")
 
             prev_md = state.last_article_md or ""
             prev_json = state.last_article_json or {}
@@ -694,4 +692,3 @@ class ContentGenWorkflow(Workflow):
                 error=err,
             )
             return StopEvent(result=out.model_dump())
-

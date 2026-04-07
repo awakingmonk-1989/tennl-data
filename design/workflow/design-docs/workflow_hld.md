@@ -15,9 +15,9 @@ understand the system before diving into runtime-specific implementation.
 into runtime-specific implementations.
 
 **Companion documents:**
-- Agent Workflow Spec (`/workflow/specs/agent_workflow_spec.md`) — the contract
-- Data Model Spec (`/workflow/specs/workflow_data_model_spec.md`) — persistence
-- Flow Diagram (`/workflow/diagrams/content_gen_workflow_flow.md`) — visual
+- Agent Workflow Spec (`/design/workflow/specs/agent_workflow_spec.md`) — the contract
+- Data Model Spec (`/design/workflow/specs/workflow_data_model_spec.md`) — persistence
+- Flow Diagram (`/design/workflow/diagrams/content_gen_workflow_flow.md`) — visual
 
 ---
 

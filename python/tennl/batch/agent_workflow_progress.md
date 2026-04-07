@@ -171,7 +171,7 @@ deep dive count) after each run.
 - [ ] **Design persistence layer** — decide on SQLite vs Postgres for
   `Workflow`, `WorkflowExecution`, `Article` tables. Reference the
   original HLD data model spec at
-  `workflow/specs/workflow_data_model_spec.md`.
+  `design/workflow/specs/workflow_data_model_spec.md`.
 - [ ] **Implement run history store** — persist run_id, status, input,
   output refs, execution trace, timestamps. Query past runs.
 - [ ] **Cold storage for artifacts** — move `out/{run_id}/` artifacts to

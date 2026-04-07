@@ -1,0 +1,47 @@
+# ===========================================================================
+# Docker Compose — Self-hosted vLLM for any cloud GPU (RunPod Pod, Lambda, etc.)
+# ===========================================================================
+# Usage:
+#   docker compose -f docker-compose-vllm.yml up -d
+#   curl http://localhost:8000/v1/completions -d '{"model":"Qwen/Qwen2.5-7B-Instruct","prompt":"Hello","max_tokens":100}'
+# ===========================================================================
+
+services:
+  vllm-qwen:
+    image: vllm/vllm-openai:latest
+    runtime: nvidia
+    ports:
+      - "8000:8000"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - model-cache:/root/.cache/huggingface
+    command: >
+      --model Qwen/Qwen2.5-7B-Instruct
+      --tensor-parallel-size 1
+      --gpu-memory-utilization 0.90
+      --max-model-len 8192
+      --max-num-batched-tokens 16384
+      --max-num-seqs 256
+      --dtype bfloat16
+      --port 8000
+      --trust-remote-code
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+
+volumes:
+  model-cache:
+    driver: local

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from enum import StrEnum, Enum
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,11 @@ from openai import APIConnectionError, APITimeoutError, InternalServerError, Rat
 from .settings import LlmProviderConfig
 
 logger = logging.getLogger(__name__)
+
+class LLMType(StrEnum):
+    OPENAI = "openai"
+    AZURE_FOUNDRY_OPENAI = "azure-openai"
+    LITELLM = "lite_llm"
 
 _TRANSIENT_LLM_ERRORS = (
     RateLimitError,
@@ -71,6 +77,16 @@ def _load_secret_token() -> str | None:
     return raw
 
 
+def _optional_kwargs(cfg: LlmProviderConfig) -> dict[str, Any]:
+    """Collect optional generation params that are set on the config."""
+    kwargs: dict[str, Any] = {}
+    if cfg.temperature is not None:
+        kwargs["temperature"] = cfg.temperature
+    if cfg.max_retries is not None:
+        kwargs["max_retries"] = cfg.max_retries
+    return kwargs
+
+
 def build_llm(cfg: LlmProviderConfig):
     """
     Build a LlamaIndex LLM instance from YAML config.
@@ -79,10 +95,11 @@ def build_llm(cfg: LlmProviderConfig):
     - url: string
     - auth_token: string
 
-    We also accept optional keys (e.g., model, engine, api_version) and will
-    extend this over time.
+    We also accept optional keys (e.g., model, engine, api_version,
+    temperature, max_retries, context_window) and will extend this over time.
     """
     name = cfg.name
+    opts = _optional_kwargs(cfg)
 
     if name == "openai":
         # Official OpenAI: `OpenAI(api_key=..., model=...)`
@@ -90,25 +107,70 @@ def build_llm(cfg: LlmProviderConfig):
         if cfg.url:
             from llama_index.llms.openai_like import OpenAILike
 
-            return OpenAILike(model=cfg.model, api_base=cfg.url, api_key=cfg.auth_token or None)
+            like_kwargs: dict[str, Any] = {}
+            if cfg.context_window is not None:
+                like_kwargs["context_window"] = cfg.context_window
+            if cfg.is_chat_model is not None:
+                like_kwargs["is_chat_model"] = cfg.is_chat_model
+            if cfg.is_function_calling_model is not None:
+                like_kwargs["is_function_calling_model"] = cfg.is_function_calling_model
+            return OpenAILike(
+                model=cfg.model,
+                api_base=cfg.url,
+                api_key=cfg.auth_token or None,
+                **opts,
+                **like_kwargs,
+            )
 
         from llama_index.llms.openai import OpenAI
 
-        return OpenAI(model=cfg.model, api_key=cfg.auth_token or None)
+        return OpenAI(model=cfg.model, api_key=cfg.auth_token or None, **opts)
 
     if name == "litellm":
         from llama_index.llms.litellm import LiteLLM
 
-        return LiteLLM(model=cfg.model, api_base=cfg.url or None, api_key=cfg.auth_token or None)
+        return LiteLLM(
+            model=cfg.model,
+            api_base=cfg.url or None,
+            api_key=cfg.auth_token or None,
+            **opts,
+        )
+
+    if name == "anthropic":
+        from llama_index.llms.anthropic import Anthropic
+
+        return Anthropic(
+            model=cfg.model,
+            api_key=cfg.auth_token or None,
+            **opts,
+        )
+
+    if name == "openai_like":
+        from llama_index.llms.openai_like import OpenAILike
+
+        like_kwargs = {}
+        if cfg.context_window is not None:
+            like_kwargs["context_window"] = cfg.context_window
+        if cfg.is_chat_model is not None:
+            like_kwargs["is_chat_model"] = cfg.is_chat_model
+        if cfg.is_function_calling_model is not None:
+            like_kwargs["is_function_calling_model"] = cfg.is_function_calling_model
+        return OpenAILike(
+            model=cfg.model,
+            api_base=cfg.url or None,
+            api_key=cfg.auth_token or None,
+            **opts,
+            **like_kwargs,
+        )
 
     if name == "azure-foundry-openai":
         import os
 
         from llama_index.llms.azure_openai import AzureOpenAI
 
-        kwargs: dict[str, Any] = {}
+        azure_kwargs: dict[str, Any] = {}
         if cfg.api_version:
-            kwargs["api_version"] = cfg.api_version
+            azure_kwargs["api_version"] = cfg.api_version
         engine = cfg.engine
         if not engine:
             engine = os.environ.get("TENNL_AZURE_OPENAI_ENGINE", "").strip() or None
@@ -117,17 +179,17 @@ def build_llm(cfg: LlmProviderConfig):
                 "azure-foundry-openai provider requires `engine` (Azure deployment name) "
                 "in app.yaml or TENNL_AZURE_OPENAI_ENGINE env var"
             )
-        kwargs["engine"] = engine
+        azure_kwargs["engine"] = engine
         azure_api_key = os.environ.get("TENNL_AZURE_OPENAI_API_KEY", "").strip() or None
 
-        # Prefer azure_endpoint when provided; fall back to api_base for compatibility.
         return AzureOpenAI(
             model=cfg.model,
             azure_endpoint=cfg.url or None,
             api_key=azure_api_key or cfg.auth_token or _load_secret_token(),
-            max_retries=8,
+            max_retries=opts.get("max_retries", 8),
             timeout=120.0,
-            **kwargs,
+            **{k: v for k, v in opts.items() if k != "max_retries"},
+            **azure_kwargs,
         )
 
     raise ValueError(f"Unknown LLM provider: {name}")

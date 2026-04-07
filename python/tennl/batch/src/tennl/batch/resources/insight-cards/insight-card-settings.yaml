@@ -1,0 +1,150 @@
+# insight-card-settings.yaml
+# Configuration for LlamaIndex-based insight card orchestrator.
+#
+# LLM provider configuration is managed centrally in app.yaml.
+# Select the active provider via TENNL_LLM_PROVIDER env var or --provider CLI flag.
+# This file contains only generation parameters and prompt templates.
+
+# ─────────────────────────────────────────────
+# Generation settings
+# ─────────────────────────────────────────────
+generation:
+  prompt_version: large       # mini | large | small | moe
+  count: 10                   # total cards to generate per run
+  max_workers: 4              # parallel workers (ignored in sequential mode)
+  max_tokens: 600
+  output_file: insight_cards_output.json
+
+
+# ─────────────────────────────────────────────
+# Prompt templates
+# Variables in {braces} are filled by the orchestrator at runtime.
+# system_prompt and user_prompt map to LlamaIndex SimpleChatEngine:
+#   system_prompt → passed to from_defaults(system_prompt=...)
+#   user_prompt   → passed to engine.chat(message=...)
+# Each generation gets a FRESH engine instance — no shared session state.
+# ─────────────────────────────────────────────
+prompts:
+
+  mini:
+    # Any model. Minimal. System prompt is empty — all instruction in user turn.
+    system_prompt: ""
+    user_prompt: |
+      Write a short insight card on the topic: {topic}.
+
+      Category: {category}
+      Hook style: {hook_type}
+      Emotional register: {register}
+      Title style: {title_style}
+      Avoid titles like: {avoid_titles}
+
+      Rules:
+      - Open with a surprising, non-obvious claim or question
+      - Explain the mechanism in plain language (no jargon)
+      - Include one concrete example or observation (no citations, no statistics, no data references)
+      - End with a practical implication or reflection prompt
+      - Length: 120–180 words
+      - Tone: conversational, intelligent, never preachy
+      - Do not reference news, current events, studies, or data sources
+      - Do not include any unsafe, harmful, hateful, or adult content
+
+      Output format (exactly this, no markdown, no extra labels):
+      TITLE: [a short punchy title, max 8 words]
+      CATEGORY: [{category}]
+      [card text]
+
+  large:
+    # Large models. Full structure spec in system, seeded variables in user.
+    system_prompt: |
+      You are an insight card writer. Insight cards are short, self-contained pieces
+      that deliver one genuinely surprising idea with clarity and warmth.
+
+      STRUCTURE (follow in order):
+      1. TITLE — Max 8 words. Style: {title_style}. {avoid_titles}.
+      2. CATEGORY — Exactly as provided in the input.
+      3. HOOK — One sentence. Counterintuitive claim, vivid question, or named concept reveal.
+      4. MECHANISM — 2–3 sentences. Explain why or how. Plain language. No jargon.
+      5. EXAMPLE — 1–2 sentences. Concrete, relatable observation. No citations. No statistics. No data references.
+      6. IMPLICATION — 1–2 sentences. What this means for the reader, or a reflection prompt.
+      7. CLOSE — One memorable sentence. A reframe, lingering thought, or quiet action.
+
+      HARD RULES:
+      - No news, current events, or references to studies or publications
+      - No statistics, percentages, or quantified claims requiring a source
+      - No harmful, hateful, abusive, sexual, or unsafe content
+      - No preachy or moralistic tone
+      - No markdown, headers, or extra labels beyond TITLE and CATEGORY
+
+      OUTPUT FORMAT:
+      TITLE: [title]
+      CATEGORY: [category]
+      [card text as flowing prose]
+
+    user_prompt: |
+      Write one insight card.
+
+      Topic: {topic}
+      Category: {category}
+      Hook style: {hook_type}
+      Emotional register: {register}
+      Opening word class: {opening_word_class}
+
+  small:
+    # ≤30B instruct models. Explicit sentence slots. Single prompt block.
+    # System prompt is empty — all instruction in user turn with [TASK] tags.
+    system_prompt: ""
+    user_prompt: |
+      [TASK] Write a short insight card. Follow every instruction exactly.
+
+      [INPUTS]
+      Topic: {topic}
+      Category: {category}
+      Hook: {hook_type}
+      Tone: {register}
+      Title style: {title_style}
+
+      [FORMAT] Output exactly this structure, nothing else:
+      TITLE: [max 8 words, {title_style}. {avoid_titles}]
+      CATEGORY: [{category}]
+      Sentence 1 — A surprising or counterintuitive claim about the topic.
+      Sentence 2 — Explain why this happens in plain words.
+      Sentence 3 — Give one everyday example that makes it concrete.
+      Sentence 4 — Say what this means for a person in ordinary life.
+      Sentence 5 — End with one short memorable thought or question.
+
+      [RULES]
+      Do not mention news, studies, statistics, or any numbers.
+      Do not write anything harmful, hateful, sexual, or unsafe.
+      Do not use bullet points, headers, or markdown.
+      Do not add any extra labels beyond TITLE and CATEGORY.
+      Write only what is shown in FORMAT. Nothing before it. Nothing after it.
+
+      [BEGIN]
+      TITLE:
+
+  moe:
+    # MoE / non-reasoning models. Prefix-seeded. No chain-of-thought.
+    # {seed_prefix} is a completed first line injected by orchestrator — model never sees the rotation logic.
+    system_prompt: ""
+    user_prompt: |
+      Complete this insight card. Write naturally. Do not explain your reasoning. Do not use lists or headers.
+
+      Topic: {topic}
+      Category: {category}
+      Opening style: {hook_type}
+      Feeling: {register}
+
+      The card should:
+      - Open with something unexpected about the topic
+      - Explain it simply without any numbers or source references
+      - Include a grounded everyday observation
+      - Close with a thought the reader will carry with them
+      - Be between 120 and 160 words
+
+      Title style: {title_style}. {avoid_titles}.
+      Do not write news, harmful, hateful, sexual, or unsafe content.
+      Output only the card in this format:
+
+      TITLE: [max 8 words]
+      CATEGORY: {category}
+      {seed_prefix}

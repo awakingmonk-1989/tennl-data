@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 from .schema_validation import validate_article_schema
 from ..models import QualityAndSchemaBundle, QualityReport, SchemaReport
+from ..runtime_assets import read_article_asset
 from ..settings import AppSettings
 
 
@@ -58,15 +58,6 @@ def run_quality_and_schema_eval(article_md: str, article_json: dict[str, Any]) -
     )
 
 
-def _repo_root() -> Path:
-    # .../src/tennl/batch/workflows/stages/quality_eval.py -> repo root (tennl-data/) is 8 parents up
-    return Path(__file__).resolve().parents[8]
-
-
-def _read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
-
-
 def _extract_json_object(text: str) -> dict[str, Any]:
     text = text.strip()
     if text.startswith("```"):
@@ -87,10 +78,9 @@ def _extract_json_object(text: str) -> dict[str, Any]:
 
 
 async def run_quality_with_llm(article_md: str, article_json: dict[str, Any]) -> QualityReport:
-    root = _repo_root()
-    prompt = _read_text(root / "prompts" / "eval_pass2_quality_prompt.md")
-    narration_spec = _read_text(root / "specs" / "narration_flow_spec_v1.1.md")
-    skill_creativity = _read_text(root / "skills" / "skill_creativity_narration.md")
+    prompt = read_article_asset("prompts", "eval_pass2_quality_prompt.md")
+    narration_spec = read_article_asset("specs", "narration_flow_spec_v1.1.md")
+    skill_creativity = read_article_asset("skills", "skill_creativity_narration.md")
 
     full = (
         f"{prompt}\n\n"
@@ -116,4 +106,3 @@ async def run_quality_with_llm(article_md: str, article_json: dict[str, Any]) ->
         }
     )
     return bundle_like.quality_report
-

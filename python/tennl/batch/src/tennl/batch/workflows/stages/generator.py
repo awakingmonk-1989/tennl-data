@@ -6,12 +6,8 @@ from pathlib import Path
 from typing import Any, Optional
 
 from ..models import PromptRuntimeInput, QualityConstraints, WorkflowInput
+from ..runtime_assets import read_article_asset
 from ..settings import AppSettings, PromptTemplate
-
-
-def _repo_root() -> Path:
-    # .../src/tennl/batch/workflows/stages/generator.py -> repo root (tennl-data/) is 8 parents up
-    return Path(__file__).resolve().parents[8]
 
 
 def _pkg_resources() -> Path:
@@ -122,13 +118,12 @@ def format_prompt(template: PromptTemplate, inp: PromptRuntimeInput) -> str:
 
 def _load_shared_assets() -> dict[str, str]:
     """Load all spec/skill/sample files shared across prompt variants."""
-    root = _repo_root()
     assets = {
-        "prompt": _esc(_read_text(root / "prompts" / "conten_gen_prompt_page_post.md")),
-        "content_spec": _esc(_read_text(root / "specs" / "content_gen_spec.md")),
-        "narration_spec": _esc(_read_text(root / "specs" / "narration_flow_spec_v1.1.md")),
-        "schema_spec": _esc(_read_text(root / "specs" / "json_schema_spec_v1.md")),
-        "skill_gen": _esc(_read_text(root / "skills" / "skill_content_generation.md")),
+        "prompt": _esc(read_article_asset("prompts", "conten_gen_prompt_page_post.md")),
+        "content_spec": _esc(read_article_asset("specs", "content_gen_spec.md")),
+        "narration_spec": _esc(read_article_asset("specs", "narration_flow_spec_v1.1.md")),
+        "schema_spec": _esc(read_article_asset("specs", "json_schema_spec_v1.md")),
+        "skill_gen": _esc(read_article_asset("skills", "skill_content_generation.md")),
     }
 
     sample_md_path = _pkg_resources() / "sample_output_reference.md"
@@ -196,12 +191,11 @@ def _build_refine_prompt(
     merged_eval: dict[str, Any],
     original_prompt_text: str,
 ) -> str:
-    root = _repo_root()
-    refine_template = _read_text(root / "prompts" / "refine_prompt.md")
-    content_spec = _read_text(root / "specs" / "content_gen_spec.md")
-    narration_spec = _read_text(root / "specs" / "narration_flow_spec_v1.1.md")
-    schema_spec = _read_text(root / "specs" / "json_schema_spec_v1.md")
-    skill_gen = _read_text(root / "skills" / "skill_content_generation.md")
+    refine_template = read_article_asset("prompts", "refine_prompt.md")
+    content_spec = read_article_asset("specs", "content_gen_spec.md")
+    narration_spec = read_article_asset("specs", "narration_flow_spec_v1.1.md")
+    schema_spec = read_article_asset("specs", "json_schema_spec_v1.md")
+    skill_gen = read_article_asset("skills", "skill_content_generation.md")
 
     sample_json_path = _pkg_resources() / "sample_output_reference.json"
     sample_json = _read_text(sample_json_path) if sample_json_path.exists() else ""

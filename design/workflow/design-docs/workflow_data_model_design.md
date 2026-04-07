@@ -10,7 +10,7 @@ This document provides the design-level view of the workflow data model.
 It covers entity relationships, indexing strategy, storage considerations,
 and implementation guidance for any persistence backend.
 
-**Companion:** Workflow Data Model Spec (`/workflow/specs/workflow_data_model_spec.md`)
+**Companion:** Workflow Data Model Spec (`/design/workflow/specs/workflow_data_model_spec.md`)
 defines the authoritative schemas. This document explains the design rationale.
 
 ---

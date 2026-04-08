@@ -13,3 +13,7 @@ secrets.txt
 dist
 **/dist
 out
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.DS_Store

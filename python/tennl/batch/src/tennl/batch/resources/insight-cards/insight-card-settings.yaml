@@ -102,6 +102,7 @@ prompts:
       Hook: {hook_type}
       Tone: {register}
       Title style: {title_style}
+      
 
       [FORMAT] Output exactly this structure, nothing else:
       TITLE: [max 8 words, {title_style}. {avoid_titles}]

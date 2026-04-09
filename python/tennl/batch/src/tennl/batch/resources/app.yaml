@@ -18,9 +18,10 @@ llm:
 
     - name: litellm
       url: ""
-      auth_token: ""
-      model: "anthropic/claude-sonnet-4-20250514"
-      temperature: 0.85
+      auth_token: ""   # loaded from GEMINI_API_KEY env var at runtime by litellm
+      model: "gemini/gemini-3.1-flash-lite-preview"
+      # Gemini 3.x: LiteLLM recommends temperature = 1 for this model family
+      temperature: 1
       max_retries: 3
 
     - name: anthropic

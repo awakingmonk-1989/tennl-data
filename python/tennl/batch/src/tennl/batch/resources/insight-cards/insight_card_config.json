@@ -277,3 +277,4 @@
     ],
     "strategy": "round-robin per slot independently — not as a fixed tuple. Parallel workers each get a unique offset so they never sample the same combination simultaneously."
   }
+}

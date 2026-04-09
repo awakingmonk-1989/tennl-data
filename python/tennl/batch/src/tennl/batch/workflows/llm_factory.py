@@ -8,7 +8,7 @@ from typing import Any
 import tenacity
 from openai import APIConnectionError, APITimeoutError, InternalServerError, RateLimitError
 
-from .settings import LlmProviderConfig
+from tennl.batch.settings import LlmProviderConfig
 
 logger = logging.getLogger(__name__)
 

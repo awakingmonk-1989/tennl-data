@@ -119,7 +119,7 @@ TENNL_LLM_PROVIDER=litellm UV_PROJECT_ENVIRONMENT="/Users/devansh/tennl-data/pyt
 | `python/tennl/batch/src/tennl/batch/generator/insight_cards/insight_card_llamaindex_orchestrator.py` | Complete | Inspection scaffolding removed, all extractors + triple-file output working |
 | `python/tennl/batch/src/tennl/batch/domain/insight_cards.py` | Complete | `metadata` field + `CompletionTokensDetails`, `PromptTokensDetails`, `LiteLLMGeminiTokenUsage` added |
 | `python/tennl/batch/src/tennl/batch/domain/__init__.py` | Complete | All new models exported |
-| `python/tennl/batch/src/tennl/batch/resources/app.yaml` | Modified | litellm provider → `gemini/gemini-2.5-flash` |
+| `python/tennl/batch/src/tennl/batch/resources/app.yaml` | Modified |  
 | `python/tennl/batch/output/response_raw_dump.json` | Reference artifact | Full LiteLLM ModelResponse from live Gemini call — DO NOT DELETE |
 | `tasks/2026-04-08-litellm-gemini-spec.md` | New | LiteLLM technical spec with response structure details |
 

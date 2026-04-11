@@ -10,6 +10,7 @@ from tennl.batch.generator.insight_cards.insight_card_llamaindex_orchestrator im
     _build_messages,
     _log_card,
     generate_one_card,
+    validate_insight_card_language,
 )
 
 
@@ -51,6 +52,7 @@ class FakeLLM:
 
 def _seed() -> dict:
     return {
+        "languages": ["English", "Hindi"],
         "hook_types": ["question-led"],
         "registers": ["wonder"],
         "opening_word_classes": ["question-word"],
@@ -77,6 +79,14 @@ class InsightCardOrchestratorTests(unittest.TestCase):
         self.assertEqual(variables["register"], "wonder")
         self.assertEqual(variables["tone"], "wonder")
         self.assertEqual(variables["emotional_register"], "wonder")
+        self.assertEqual(variables["language"], "English")
+        self.assertIn("counterintuitive mechanism", variables["themes_json"])
+        self.assertIn("time and attention", variables["human_contexts_json"])
+
+    def test_validate_insight_card_language(self) -> None:
+        self.assertEqual(validate_insight_card_language(_seed(), "English"), "English")
+        with self.assertRaises(ValueError):
+            validate_insight_card_language(_seed(), "Klingon")
 
     def test_generate_one_card_returns_structured_result(self) -> None:
         card = InsightCard(

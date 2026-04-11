@@ -16,6 +16,22 @@
       "unsafe"
     ]
   },
+  "languages": [
+    "English",
+    "Telugu",
+    "Hindi",
+    "Tamil",
+    "Malayalam",
+    "Kannada",
+    "Bengali",
+    "Punjabi",
+    "Arabic",
+    "French",
+    "German",
+    "Swedish",
+    "Dutch",
+    "Portuguese"
+  ],
   "hook_types": [
     "contrarian-claim",
     "question-led",
@@ -268,6 +284,7 @@
     "_note": "Slot names used by orchestrator to track rotation state. theme and human_context are now sampled from the category-specific pool, not a global array. Each slot rotates independently.",
     "slots": [
       "category",
+      "language",
       "hook_type",
       "register",
       "opening_word_class",

@@ -20,10 +20,12 @@
 # settings/util/providers.py). This script exports litellm explicitly.
 #
 # Usage:
-#   ./scripts/insight_cards/insight_card_batch_gen_batch_seq.sh
-#   ./scripts/insight_cards/insight_card_batch_gen_batch_seq.sh Finance
-#   ./scripts/insight_cards/insight_card_batch_gen_batch_seq.sh -n 50 -w 4 Technology
-#   ./scripts/insight_cards/insight_card_batch_gen_batch_seq.sh -n 2 --dry-run
+#   ./scripts/insight_cards/insight_card_batch_gen_batch_seq.sh --language English
+#   ./scripts/insight_cards/insight_card_batch_gen_batch_seq.sh --language Hindi Finance
+#   ./scripts/insight_cards/insight_card_batch_gen_batch_seq.sh --language English -n 50 -w 4 Technology
+#   ./scripts/insight_cards/insight_card_batch_gen_batch_seq.sh --language English -n 2 --dry-run
+#
+# --language is required (must match a value in insight_card_config.json "languages").
 #
 # Defaults: COUNT=100, WORKERS=5. Each invocation writes under repo-root output/:
 #   <repo>/output/gemini_batch_runs/run_<YYYYMMDD_HHMMSS>/
@@ -56,13 +58,18 @@ COUNT=100
 WORKERS=5
 DRY_RUN=0
 SINGLE_CATEGORY=""
+LANGUAGE=""
 
 usage() {
-  sed -n '1,35p' "$0" | tail -n +2
+  sed -n '1,40p' "$0" | tail -n +2
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --language)
+      LANGUAGE="${2:?}"
+      shift 2
+      ;;
     -n|--count)
       COUNT="${2:?}"
       shift 2
@@ -103,6 +110,17 @@ fi
 
 if [[ ! -f "$CONFIG_JSON" ]]; then
   echo "error: config not found: $CONFIG_JSON" >&2
+  exit 1
+fi
+
+if [[ -z "$LANGUAGE" ]]; then
+  echo "error: --language is required (see insight_card_config.json \"languages\")" >&2
+  usage >&2
+  exit 1
+fi
+
+if ! jq -e --arg l "$LANGUAGE" '(.languages // []) | index($l) != null' "$CONFIG_JSON" >/dev/null; then
+  echo "error: language not in insight_card_config.json languages: $(printf '%q' "$LANGUAGE")" >&2
   exit 1
 fi
 
@@ -170,6 +188,7 @@ echo "  runs parent   : $GEMINI_BATCH_RUNS_PARENT"
 echo "  this run dir  : $RUN_ROOT"
 echo "  config json   : $CONFIG_JSON"
 echo "  count         : $COUNT"
+echo "  language      : $LANGUAGE"
 echo "  workers/run   : $WORKERS (orchestrator --mode parallel)"
 echo "  dry-run       : $DRY_RUN"
 if [[ -z "$SINGLE_CATEGORY" && ${#EXCLUDE_CATEGORIES[@]} -gt 0 ]]; then
@@ -200,6 +219,7 @@ run_one_category() {
   local -a cmd=(
     uv run python -m tennl.batch.generator.insight_cards.insight_card_llamaindex_orchestrator
     --category "$cat"
+    --language "$LANGUAGE"
     --count "$COUNT"
     --mode parallel
     --workers "$WORKERS"

@@ -107,8 +107,9 @@ formatter:
 #   Static variables (from formatter.prompt_blocks):
 #     {layout_library}, {selection_table}, {slot_sizing}
 #   Per-card variables (rotated by sampler):
-#     {topic}, {category}, {hook_type}, {tone}, {emotional_register},
+#     {language}, {topic}, {category}, {hook_type}, {tone}, {emotional_register},
 #     {title_style}, {opening_word_class}, {avoid_titles}
+#     {themes_json}, {human_contexts_json} — JSON arrays for the category pool (large prompt)
 # system_prompt and user_prompt map to LlamaIndex ChatMessage roles:
 #   system_prompt → ChatMessage(role="system", ...)
 #   user_prompt   → ChatMessage(role="user", ...)
@@ -211,7 +212,9 @@ prompts:
       Write one insight card.
 
       Language: STRICTLY In {language}. Do not write in any other language.
-      Topic: {topic}
+      Themes pool (JSON array — pick one theme as the primary lens): {themes_json}
+      Human contexts pool (JSON array — pick one context the reader inhabits): {human_contexts_json}
+      Topic anchor (primary through-line; must align with your chosen theme + context): {topic}
       Category: {category}
       Hook style: {hook_type}
       Tone: {tone}

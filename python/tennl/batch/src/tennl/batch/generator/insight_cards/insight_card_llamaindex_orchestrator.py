@@ -12,10 +12,11 @@ Insight card generator using LlamaIndex structured output.
 
 Usage:
     python insight_card_llamaindex_orchestrator.py --category Finance --dry-run
-    python insight_card_llamaindex_orchestrator.py --category Technology --mode parallel --count 5
+    python insight_card_llamaindex_orchestrator.py --category Technology --language Tamil --mode parallel --count 5
     python insight_card_llamaindex_orchestrator.py --category Finance --output-dir output/gemini_live_test
 
     ``--category`` must match a key under ``categories`` in packaged ``insight_card_config.json``.
+    ``--language`` defaults to English and must match an entry in ``languages`` in the same JSON.
     LLM provider: set TENNL_LLM_PROVIDER before launch (see app.yaml llm.providers).
 """
 from __future__ import annotations
@@ -68,6 +69,17 @@ def validate_insight_card_category(seed: dict[str, Any], category: str) -> str:
     return category
 
 
+def validate_insight_card_language(seed: dict[str, Any], language: str) -> str:
+    """Return ``language`` if listed in ``seed['languages']``; else raise ``ValueError``."""
+    allowed = seed.get("languages")
+    if not isinstance(allowed, list) or not allowed:
+        raise ValueError("Seed config is missing a non-empty 'languages' list")
+    if language not in allowed:
+        known = ", ".join(str(x) for x in allowed)
+        raise ValueError(f"Unknown language {language!r}; known: {known}")
+    return language
+
+
 # ─────────────────────────────────────────────────────────────
 # Variable sampler — single category per batch, rotating slots
 # ─────────────────────────────────────────────────────────────
@@ -86,6 +98,7 @@ class InsightCardVariableSampler(BaseSampler):
         worker_id: int = 0,
         *,
         allowed_categories: list[str],
+        language: str = "English",
     ):
         if not allowed_categories:
             raise ValueError("allowed_categories must be non-empty")
@@ -112,10 +125,14 @@ class InsightCardVariableSampler(BaseSampler):
         self._context_rotator = SlotRotator(cat_pool["human_contexts"], worker_id)
         self._avoid_titles = ts.get("avoid", [])
         self._worker_id = worker_id
+        self._language = language
+        self._themes_json = json.dumps(cat_pool["themes"], ensure_ascii=False)
+        self._human_contexts_json = json.dumps(cat_pool["human_contexts"], ensure_ascii=False)
 
     def sample(self) -> dict[str, Any]:
         v = {k: r.next() for k, r in self._global_rotators.items()}
         v["category"] = self._fixed_category
+        v["language"] = self._language
         v["theme"] = self._theme_rotator.next()
         v["human_context"] = self._context_rotator.next()
         v["topic"] = f"{v['theme']} in the context of {v['human_context']}"
@@ -124,6 +141,8 @@ class InsightCardVariableSampler(BaseSampler):
         v["avoid_titles"] = "Avoid titles like: " + ", ".join(
             f'"{t}"' for t in self._avoid_titles
         )
+        v["themes_json"] = self._themes_json
+        v["human_contexts_json"] = self._human_contexts_json
         return v
 
 
@@ -132,15 +151,14 @@ class InsightCardVariableSampler(BaseSampler):
 # ─────────────────────────────────────────────────────────────
 
 def render_prompt(template: str, variables: dict) -> str:
-    """Simple {key} substitution. Missing keys left as-is."""
-    try:
-        return template.format(**variables)
-    except KeyError:
-        # Graceful fallback — don't crash on missing optional keys
-        result = template
-        for k, v in variables.items():
-            result = result.replace("{" + k + "}", str(v))
-        return result
+    """Substitute ``{placeholders}`` longest-keys first (avoids ``{theme}`` vs ``{themes_json}`` clashes).
+
+    Does not use ``str.format`` so JSON values may contain ``{`` / ``}`` and templates may omit unused keys.
+    """
+    result = template
+    for key in sorted(variables.keys(), key=len, reverse=True):
+        result = result.replace("{" + key + "}", str(variables[key]))
+    return result
 
 
 # ─────────────────────────────────────────────────────────────
@@ -526,12 +544,13 @@ def run_sequential(
     model_name: str = "",
     static_vars: dict[str, str] | None = None,
     formatter: InsightCardFormatterSettings | None = None,
+    language: str = "English",
 ) -> list[InsightCardResult]:
     results = []
     seen = set()
 
     sampler = InsightCardVariableSampler(
-        seed, worker_id=0, allowed_categories=allowed_categories
+        seed, worker_id=0, allowed_categories=allowed_categories, language=language
     )
     for i in range(count):
         variables = sampler.sample()
@@ -564,13 +583,17 @@ def run_parallel(
     static_vars: dict[str, str] | None = None,
     formatter: InsightCardFormatterSettings | None = None,
     future_result_timeout_s: int = INSIGHT_CARD_FUTURE_RESULT_TIMEOUT_S_DEFAULT,
+    language: str = "English",
 ) -> list[InsightCardResult]:
     results = []
     seen = set()
 
     def task(worker_id: int) -> InsightCardResult:
         sampler = InsightCardVariableSampler(
-            seed, worker_id=worker_id, allowed_categories=allowed_categories
+            seed,
+            worker_id=worker_id,
+            allowed_categories=allowed_categories,
+            language=language,
         )
         variables = sampler.sample()
         return generate_one_card(
@@ -766,11 +789,20 @@ def main():
         required=True,
         help="Seed category name (exact key under categories in insight_card_config.json)",
     )
+    parser.add_argument(
+        "--language",
+        default="English",
+        help=(
+            "Card language (must match an entry in insight_card_config.json 'languages'; "
+            "default: English)"
+        ),
+    )
     args = parser.parse_args()
 
     seed = load_packaged_seed_config()
     try:
         validate_insight_card_category(seed, args.category)
+        validate_insight_card_language(seed, args.language)
     except ValueError as e:
         logger.error("%s", e)
         sys.exit(1)
@@ -797,6 +829,7 @@ def main():
 
     logger.info("Insight card orchestrator (LlamaIndex)")
     logger.info("  category   : %s", args.category)
+    logger.info("  language   : %s", args.language)
     logger.info("  provider   : %s", provider_name)
     logger.info("  model      : %s", llm_cfg.model)
     logger.info("  version    : %s", prompt_version)
@@ -816,6 +849,7 @@ def main():
             output_dir=output_dir,
             model_name=llm_cfg.model,
             static_vars=static_vars, formatter=formatter,
+            language=args.language,
         )
     else:
         cards = run_parallel(
@@ -825,6 +859,7 @@ def main():
             model_name=llm_cfg.model,
             static_vars=static_vars, formatter=formatter,
             future_result_timeout_s=args.future_result_timeout_s,
+            language=args.language,
         )
 
     logger.info("Batch finished: %s unique successful card(s) recorded (see output-dir for files)", len(cards))

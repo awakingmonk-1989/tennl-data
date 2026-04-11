@@ -1,5 +1,5 @@
+from tennl.batch.settings import AppSettings, InsightCardSettings
+
 from .workflow import ContentGenWorkflow
 
-from .settings import AppSettings
-
-__all__ = ["ContentGenWorkflow", "AppSettings"]
+__all__ = ["ContentGenWorkflow", "AppSettings", "InsightCardSettings"]

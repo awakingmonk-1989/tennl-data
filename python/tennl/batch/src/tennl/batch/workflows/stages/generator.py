@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 from ..models import PromptRuntimeInput, QualityConstraints, WorkflowInput
 from ..runtime_assets import read_article_asset
-from ..settings import AppSettings, PromptTemplate
+from ..settings import AppSettings, LongArticlePromptTemplate
 
 
 def _pkg_resources() -> Path:
@@ -62,7 +62,7 @@ def validate_runtime(inp: PromptRuntimeInput) -> None:
             )
 
 
-def format_prompt(template: PromptTemplate, inp: PromptRuntimeInput) -> str:
+def format_prompt(template: LongArticlePromptTemplate, inp: PromptRuntimeInput) -> str:
     """Assemble the 4 template blocks from a typed *inp*.
 
     Block order: system_prompt -> runtime_input_block -> output_block -> attachments_block.

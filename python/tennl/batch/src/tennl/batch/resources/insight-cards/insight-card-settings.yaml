@@ -3,7 +3,7 @@
 #
 # LLM provider configuration is managed centrally in app.yaml.
 # Select the active provider via TENNL_LLM_PROVIDER env var or --provider CLI flag.
-# This file contains only generation parameters and prompt templates.
+# This file contains generation parameters, formatter layout config, and prompt templates.
 
 # ─────────────────────────────────────────────
 # Generation settings
@@ -12,17 +12,108 @@ generation:
   prompt_version: large       # mini | large | small | moe
   count: 10                   # total cards to generate per run
   max_workers: 4              # parallel workers (ignored in sequential mode)
-  max_tokens: 600
+  max_tokens: 1000
   output_file: insight_cards_output.json
+
+
+# ─────────────────────────────────────────────
+# Formatter — UI skeleton layout configuration
+#
+# templates:      valid layout template names (orchestrator validates LLM choice)
+# block_schemas:  per-template block key lists (orchestrator validates content_blocks keys)
+# prompt_blocks:  pre-written prompt text injected into the system prompt at runtime
+#                 via {layout_library}, {selection_table}, {slot_sizing} placeholders
+# ─────────────────────────────────────────────
+formatter:
+  templates:
+    - hook_body_close
+    - two_para_close
+    - three_para_close
+    - lead_body_close
+    - para_bullets_close
+
+  block_schemas:
+    hook_body_close: [hook, body, close]
+    two_para_close: [para1, para2, close]
+    three_para_close: [para1, para2, para3, close]
+    lead_body_close: [lead, body, close]
+    para_bullets_close: [para, bullets, close]
+
+  prompt_blocks:
+    layout_library: |
+      Choose exactly one layout for the "layout" field and populate "content_blocks"
+      with the matching keys:
+
+      hook_body_close
+        hook: 1 sentence — standalone attention-grabber (question, claim, or reveal)
+        body: 3-5 sentences — mechanism + example + implication merged
+        close: 1 sentence — reflective reframe or lingering thought
+
+      two_para_close
+        para1: 2-3 sentences — hook folded in + mechanism
+        para2: 2-3 sentences — example + implication
+        close: 1 sentence — reflective reframe or lingering thought
+
+      three_para_close
+        para1: 2 sentences — hook + setup
+        para2: 2 sentences — mechanism / depth
+        para3: 2 sentences — example + implication
+        close: 1 sentence — reflective reframe or lingering thought
+
+      lead_body_close
+        lead: 1-2 sentences — concept name unpacked (rendered bold/highlighted by UI)
+        body: 3-4 sentences — mechanism + example + implication merged
+        close: 1 sentence — reflective reframe or lingering thought
+
+      para_bullets_close
+        para: 2-3 sentences — hook + mechanism
+        bullets: list of 2-4 items, each <=15 words — concrete observations or examples
+        close: 1 sentence — reflective reframe or lingering thought
+
+    selection_table: |
+      Use hook_type + emotional_register + title_style to pick the best layout:
+
+      hook_type=contrarian-claim + register=wonder/challenge -> hook_body_close
+      hook_type=question-led + register=wonder/challenge -> hook_body_close
+      hook_type=question-led + register=comfort/nostalgia -> two_para_close
+      hook_type=story-opening + register=comfort/nostalgia -> two_para_close
+      hook_type=story-opening + register=wonder -> three_para_close
+      hook_type=analogy-led + register=comfort/nostalgia -> two_para_close
+      hook_type=analogy-led + register=wonder/challenge -> three_para_close
+      hook_type=named-concept + any register -> lead_body_close
+      any hook_type + register=urgency -> para_bullets_close
+      hook_type=contrarian-claim + register=comfort (practical categories) -> para_bullets_close
+
+      Title-style overrides (take precedence):
+      title_style=named concept reveal -> lead_body_close
+      title_style=rule or principle framing -> lead_body_close
+      title_style=intriguing question -> hook_body_close
+
+      You may override the table if the content clearly benefits from a different layout.
+
+    slot_sizing: |
+      hook/lead/close: 1-2 sentences, 10-30 words
+      body: 3-5 sentences, 50-90 words
+      para/para1/para2/para3: 2-3 sentences, 30-60 words
+      bullets: 2-4 items, each <=15 words
+
+      Total content word budget: 120-180 words (hard cap).
+      The "content" field must equal all content_blocks values joined with a space.
 
 
 # ─────────────────────────────────────────────
 # Prompt templates
 # Variables in {braces} are filled by the orchestrator at runtime.
-# system_prompt and user_prompt map to LlamaIndex SimpleChatEngine:
-#   system_prompt → passed to from_defaults(system_prompt=...)
-#   user_prompt   → passed to engine.chat(message=...)
-# Each generation gets a FRESH engine instance — no shared session state.
+#   Static variables (from formatter.prompt_blocks):
+#     {layout_library}, {selection_table}, {slot_sizing}
+#   Per-card variables (rotated by sampler):
+#     {language}, {topic}, {category}, {hook_type}, {tone}, {emotional_register},
+#     {title_style}, {opening_word_class}, {avoid_titles}
+#     {themes_json}, {human_contexts_json} — JSON arrays for the category pool (large prompt)
+# system_prompt and user_prompt map to LlamaIndex ChatMessage roles:
+#   system_prompt → ChatMessage(role="system", ...)
+#   user_prompt   → ChatMessage(role="user", ...)
+# Each generation gets a FRESH LLM call — no shared session state.
 # ─────────────────────────────────────────────
 prompts:
 
@@ -34,8 +125,10 @@ prompts:
 
       Category: {category}
       Hook style: {hook_type}
-      Emotional register: {register}
+      Tone: {tone}
+      Emotional register: {emotional_register}
       Title style: {title_style}
+      Opening word class: {opening_word_class}
       Avoid titles like: {avoid_titles}
 
       Rules:
@@ -48,10 +141,23 @@ prompts:
       - Do not reference news, current events, studies, or data sources
       - Do not include any unsafe, harmful, hateful, or adult content
 
-      Output format (exactly this, no markdown, no extra labels):
-      TITLE: [a short punchy title, max 8 words]
-      CATEGORY: [{category}]
-      [card text]
+      UI SKELETON — choose a visual layout and split your content into named blocks.
+
+      {layout_library}
+
+      {selection_table}
+
+      Return only valid JSON with exactly these fields:
+      - title
+      - category
+      - content (full flowing prose)
+      - layout (chosen layout name from above)
+      - content_blocks (object with keys matching your chosen layout)
+      - tone
+      - emotional_register
+      - title_style
+      - hook_type
+      - opening_word_class
 
   large:
     # Large models. Full structure spec in system, seeded variables in user.
@@ -59,35 +165,63 @@ prompts:
       You are an insight card writer. Insight cards are short, self-contained pieces
       that deliver one genuinely surprising idea with clarity and warmth.
 
-      STRUCTURE (follow in order):
-      1. TITLE — Max 8 words. Style: {title_style}. {avoid_titles}.
-      2. CATEGORY — Exactly as provided in the input.
-      3. HOOK — One sentence. Counterintuitive claim, vivid question, or named concept reveal.
-      4. MECHANISM — 2–3 sentences. Explain why or how. Plain language. No jargon.
-      5. EXAMPLE — 1–2 sentences. Concrete, relatable observation. No citations. No statistics. No data references.
-      6. IMPLICATION — 1–2 sentences. What this means for the reader, or a reflection prompt.
-      7. CLOSE — One memorable sentence. A reframe, lingering thought, or quiet action.
+      WRITING BEATS — follow this order when composing the card content:
+      1. HOOK — One sentence. Counterintuitive claim, vivid question, or named concept reveal.
+      2. MECHANISM — 2–3 sentences. Explain why or how. Plain language. No jargon.
+      3. EXAMPLE — 1–2 sentences. Concrete, relatable observation. No citations. No statistics. No data references.
+      4. IMPLICATION — 1–2 sentences. What this means for the reader, or a reflection prompt.
+      5. CLOSE — One memorable sentence. A reframe, lingering thought, or quiet action.
+
+      UI SKELETON — the card content will be rendered as a formatted UI card. You must choose
+      a visual layout and split your content into named blocks that map to UI components.
+      The "content" field contains the full flowing prose. The "content_blocks" field contains
+      the same text split into the blocks defined by your chosen layout. Both must be consistent —
+      joining all content_blocks values with a space must produce the content field.
+
+      {layout_library}
+
+      LAYOUT SELECTION — use the card's hook_type, emotional_register, and title_style to
+      pick the best-fit layout from the table below. You may override the recommendation if
+      the content you are writing clearly benefits from a different layout.
+
+      {selection_table}
+
+      BLOCK SIZING — each block has word and sentence limits to keep cards compact.
+
+      {slot_sizing}
 
       HARD RULES:
       - No news, current events, or references to studies or publications
       - No statistics, percentages, or quantified claims requiring a source
       - No harmful, hateful, abusive, sexual, or unsafe content
       - No preachy or moralistic tone
-      - No markdown, headers, or extra labels beyond TITLE and CATEGORY
-
-      OUTPUT FORMAT:
-      TITLE: [title]
-      CATEGORY: [category]
-      [card text as flowing prose]
+      - Return valid JSON only. No markdown, prose framing, code fences, or extra keys.
+      - The JSON must contain exactly these fields:
+        title: max 8 words
+        category: exactly the provided category
+        content: the full flowing card prose (all beats joined)
+        layout: the chosen layout template name from the library above
+        content_blocks: object with keys matching the chosen layout's block names
+        tone: exactly the provided tone
+        emotional_register: exactly the provided emotional_register
+        title_style: exactly the provided title_style
+        hook_type: exactly the provided hook_type
+        opening_word_class: exactly the provided opening_word_class
 
     user_prompt: |
       Write one insight card.
 
-      Topic: {topic}
+      Language: STRICTLY In {language}. Do not write in any other language.
+      Themes pool (JSON array — pick one theme as the primary lens): {themes_json}
+      Human contexts pool (JSON array — pick one context the reader inhabits): {human_contexts_json}
+      Topic anchor (primary through-line; must align with your chosen theme + context): {topic}
       Category: {category}
       Hook style: {hook_type}
-      Emotional register: {register}
+      Tone: {tone}
+      Emotional register: {emotional_register}
+      Title style: {title_style}
       Opening word class: {opening_word_class}
+      {avoid_titles}
 
   small:
     # ≤30B instruct models. Explicit sentence slots. Single prompt block.
@@ -100,40 +234,56 @@ prompts:
       Topic: {topic}
       Category: {category}
       Hook: {hook_type}
-      Tone: {register}
+      Tone: {tone}
+      Emotional register: {emotional_register}
       Title style: {title_style}
-      
+      Opening word class: {opening_word_class}
 
-      [FORMAT] Output exactly this structure, nothing else:
-      TITLE: [max 8 words, {title_style}. {avoid_titles}]
-      CATEGORY: [{category}]
-      Sentence 1 — A surprising or counterintuitive claim about the topic.
-      Sentence 2 — Explain why this happens in plain words.
-      Sentence 3 — Give one everyday example that makes it concrete.
-      Sentence 4 — Say what this means for a person in ordinary life.
-      Sentence 5 — End with one short memorable thought or question.
+      [UI SKELETON] Choose a visual layout and split content into named blocks.
+
+      {layout_library}
+
+      {selection_table}
+
+      [FORMAT] Output valid JSON only with exactly these fields:
+      - title: max 8 words, {title_style}. {avoid_titles}
+      - category: {category}
+      - content: 5 flowing sentences with this order:
+        1. A surprising or counterintuitive claim about the topic.
+        2. Explain why this happens in plain words.
+        3. Give one everyday example that makes it concrete.
+        4. Say what this means for a person in ordinary life.
+        5. End with one short memorable thought or question.
+      - layout: your chosen layout name from above
+      - content_blocks: object with keys matching your chosen layout
+      - tone: {tone}
+      - emotional_register: {emotional_register}
+      - title_style: {title_style}
+      - hook_type: {hook_type}
+      - opening_word_class: {opening_word_class}
 
       [RULES]
       Do not mention news, studies, statistics, or any numbers.
       Do not write anything harmful, hateful, sexual, or unsafe.
-      Do not use bullet points, headers, or markdown.
-      Do not add any extra labels beyond TITLE and CATEGORY.
-      Write only what is shown in FORMAT. Nothing before it. Nothing after it.
+      Do not use markdown or code fences.
+      Write only the JSON object. Nothing before it. Nothing after it.
 
       [BEGIN]
-      TITLE:
+      {
 
   moe:
     # MoE / non-reasoning models. Prefix-seeded. No chain-of-thought.
-    # {seed_prefix} is a completed first line injected by orchestrator — model never sees the rotation logic.
     system_prompt: ""
     user_prompt: |
-      Complete this insight card. Write naturally. Do not explain your reasoning. Do not use lists or headers.
+      Write one insight card as valid JSON only. Do not explain your reasoning. Do not use markdown.
 
       Topic: {topic}
       Category: {category}
-      Opening style: {hook_type}
-      Feeling: {register}
+      Hook style: {hook_type}
+      Tone: {tone}
+      Emotional register: {emotional_register}
+      Title style: {title_style}
+      Opening word class: {opening_word_class}
 
       The card should:
       - Open with something unexpected about the topic
@@ -142,10 +292,22 @@ prompts:
       - Close with a thought the reader will carry with them
       - Be between 120 and 160 words
 
-      Title style: {title_style}. {avoid_titles}.
-      Do not write news, harmful, hateful, sexual, or unsafe content.
-      Output only the card in this format:
+      UI SKELETON — choose a visual layout and split content into named blocks.
 
-      TITLE: [max 8 words]
-      CATEGORY: {category}
-      {seed_prefix}
+      {layout_library}
+
+      {selection_table}
+
+      Use a title style of {title_style}. {avoid_titles}.
+      Do not write news, harmful, hateful, sexual, or unsafe content.
+      Return exactly these JSON fields:
+      - title
+      - category
+      - content
+      - layout (chosen layout name from above)
+      - content_blocks (object with keys matching your chosen layout)
+      - tone
+      - emotional_register
+      - title_style
+      - hook_type
+      - opening_word_class

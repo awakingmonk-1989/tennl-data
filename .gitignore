@@ -17,3 +17,8 @@ out
 **/*.pyc
 **/*.pyo
 **/.DS_Store
+
+.vscode
+output
+azure_openai_runs
+gemini_batch_runs
